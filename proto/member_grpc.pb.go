@@ -4,6 +4,7 @@ package proto
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MemberServiceClient interface {
 	AddMember(ctx context.Context, in *MemberRequest, opts ...grpc.CallOption) (*MemberResponse, error)
-	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type memberServiceClient struct {
@@ -39,8 +40,8 @@ func (c *memberServiceClient) AddMember(ctx context.Context, in *MemberRequest, 
 	return out, nil
 }
 
-func (c *memberServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
-	out := new(PingResponse)
+func (c *memberServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/MemberService/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func (c *memberServiceClient) Ping(ctx context.Context, in *PingRequest, opts ..
 // for forward compatibility
 type MemberServiceServer interface {
 	AddMember(context.Context, *MemberRequest) (*MemberResponse, error)
-	Ping(context.Context, *PingRequest) (*PingResponse, error)
+	Ping(context.Context, *PingRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedMemberServiceServer()
 }
 
@@ -64,7 +65,7 @@ type UnimplementedMemberServiceServer struct {
 func (UnimplementedMemberServiceServer) AddMember(context.Context, *MemberRequest) (*MemberResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMember not implemented")
 }
-func (UnimplementedMemberServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+func (UnimplementedMemberServiceServer) Ping(context.Context, *PingRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedMemberServiceServer) mustEmbedUnimplementedMemberServiceServer() {}

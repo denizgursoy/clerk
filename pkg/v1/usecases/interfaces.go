@@ -9,6 +9,7 @@ type Cache interface {
 
 type MemberUseCase interface {
 	AddNewMemberToGroup(ctx context.Context, group string) (Member, error)
+	GetHealthCheckFromMember(ctx context.Context, member Member) error
 }
 
 type MemberRepository interface {

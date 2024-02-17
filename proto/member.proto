@@ -1,9 +1,10 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 option go_package = "./proto";
 
 service MemberService {
   rpc AddMember(MemberRequest) returns (MemberResponse);
-  rpc Ping(PingRequest) returns (PingResponse);
+  rpc Ping(PingRequest) returns (google.protobuf.Empty) {}
 }
 
 message MemberRequest{
@@ -17,7 +18,8 @@ message MemberResponse{
 }
 
 message PingRequest{
-
+  string group = 1;
+  string id = 2;
 }
 
 message PingResponse{
