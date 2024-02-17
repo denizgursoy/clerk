@@ -12,7 +12,8 @@ message MemberRequest{
 
 
 message MemberResponse{
-  string id = 1;
+  string group = 1;
+  string id = 2;
 }
 
 message PingRequest{

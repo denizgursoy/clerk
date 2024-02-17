@@ -1,4 +1,6 @@
 package usecases
 
-type s struct {
+type Member struct {
+	Group string
+	ID    string
 }

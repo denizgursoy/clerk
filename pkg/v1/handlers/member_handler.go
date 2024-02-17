@@ -21,11 +21,22 @@ func NewMemberGRPCHandler(grpcServer *grpc.Server, memberUseCase usecases.Member
 }
 
 func (m MemberGRPCHandler) AddMember(ctx context.Context, request *proto.MemberRequest) (*proto.MemberResponse, error) {
-	// TODO implement me
-	panic("implement me")
+	group, err := m.memberUseCase.AddNewMemberToGroup(ctx, request.GetGroup())
+	if err != nil {
+		return nil, err
+	}
+
+	return toResponse(group), nil
 }
 
 func (m MemberGRPCHandler) Ping(ctx context.Context, request *proto.PingRequest) (*proto.PingResponse, error) {
 	// TODO implement me
 	panic("implement me")
+}
+
+func toResponse(m usecases.Member) *proto.MemberResponse {
+	return &proto.MemberResponse{
+		Id:    m.ID,
+		Group: m.Group,
+	}
 }

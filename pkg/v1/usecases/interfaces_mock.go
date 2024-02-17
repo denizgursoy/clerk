@@ -9,9 +9,10 @@
 package usecases
 
 import (
-	"reflect"
+	context "context"
+	reflect "reflect"
 
-	"go.uber.org/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockCache is a mock of Cache interface.
@@ -50,4 +51,80 @@ func (m *MockCache) AddNewInstance() (int, error) {
 func (mr *MockCacheMockRecorder) AddNewInstance() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewInstance", reflect.TypeOf((*MockCache)(nil).AddNewInstance))
+}
+
+// MockMemberUseCase is a mock of MemberUseCase interface.
+type MockMemberUseCase struct {
+	ctrl     *gomock.Controller
+	recorder *MockMemberUseCaseMockRecorder
+}
+
+// MockMemberUseCaseMockRecorder is the mock recorder for MockMemberUseCase.
+type MockMemberUseCaseMockRecorder struct {
+	mock *MockMemberUseCase
+}
+
+// NewMockMemberUseCase creates a new mock instance.
+func NewMockMemberUseCase(ctrl *gomock.Controller) *MockMemberUseCase {
+	mock := &MockMemberUseCase{ctrl: ctrl}
+	mock.recorder = &MockMemberUseCaseMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockMemberUseCase) EXPECT() *MockMemberUseCaseMockRecorder {
+	return m.recorder
+}
+
+// AddNewMemberToGroup mocks base method.
+func (m *MockMemberUseCase) AddNewMemberToGroup(ctx context.Context, group string) (Member, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewMemberToGroup", ctx, group)
+	ret0, _ := ret[0].(Member)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddNewMemberToGroup indicates an expected call of AddNewMemberToGroup.
+func (mr *MockMemberUseCaseMockRecorder) AddNewMemberToGroup(ctx, group any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewMemberToGroup", reflect.TypeOf((*MockMemberUseCase)(nil).AddNewMemberToGroup), ctx, group)
+}
+
+// MockMemberRepository is a mock of MemberRepository interface.
+type MockMemberRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockMemberRepositoryMockRecorder
+}
+
+// MockMemberRepositoryMockRecorder is the mock recorder for MockMemberRepository.
+type MockMemberRepositoryMockRecorder struct {
+	mock *MockMemberRepository
+}
+
+// NewMockMemberRepository creates a new mock instance.
+func NewMockMemberRepository(ctrl *gomock.Controller) *MockMemberRepository {
+	mock := &MockMemberRepository{ctrl: ctrl}
+	mock.recorder = &MockMemberRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockMemberRepository) EXPECT() *MockMemberRepositoryMockRecorder {
+	return m.recorder
+}
+
+// SaveNewMemberToGroup mocks base method.
+func (m *MockMemberRepository) SaveNewMemberToGroup(ctx context.Context, group string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveNewMemberToGroup", ctx, group)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveNewMemberToGroup indicates an expected call of SaveNewMemberToGroup.
+func (mr *MockMemberRepositoryMockRecorder) SaveNewMemberToGroup(ctx, group any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNewMemberToGroup", reflect.TypeOf((*MockMemberRepository)(nil).SaveNewMemberToGroup), ctx, group)
 }
