@@ -4,3 +4,9 @@ package usecases
 type Cache interface {
 	AddNewInstance() (int, error)
 }
+
+type MemberUseCase interface {
+}
+
+type MemberRepository interface {
+}

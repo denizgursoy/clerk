@@ -9,9 +9,9 @@
 package usecases
 
 import (
-	reflect "reflect"
+	"reflect"
 
-	gomock "go.uber.org/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 // MockCache is a mock of Cache interface.

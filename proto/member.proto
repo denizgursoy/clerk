@@ -1,0 +1,24 @@
+syntax = "proto3";
+option go_package = "./proto";
+
+service MemberService {
+  rpc AddMember(MemberRequest) returns (MemberResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+message MemberRequest{
+  string group = 1;
+}
+
+
+message MemberResponse{
+  string id = 1;
+}
+
+message PingRequest{
+
+}
+
+message PingResponse{
+
+}
