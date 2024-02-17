@@ -1,0 +1,14 @@
+syntax = "proto3";
+package server;
+
+option go_package = "internal/server";
+
+service ConsumerService {
+  rpc  RegisterConsumer(ConsumerRequest) returns (stream ConsumerResponse) {}
+}
+
+message ConsumerRequest {}
+message ConsumerResponse {
+  int32 id = 1;
+  int32 total = 9;
+}
