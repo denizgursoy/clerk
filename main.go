@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/denizgursoy/clerk/internal/config"
+	"github.com/denizgursoy/clerk/internal/server"
+	"github.com/denizgursoy/clerk/internal/usecases"
 	"go.uber.org/fx"
-	"partitioner/internal/config"
-	"partitioner/internal/server"
-	"partitioner/internal/usecases"
 )
 
 func main() {

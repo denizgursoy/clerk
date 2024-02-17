@@ -3,19 +3,15 @@ package main
 import (
 	"context"
 
-	"github.com/labstack/echo/v4"
+	"github.com/denizgursoy/clerk/internal/config"
+	"github.com/denizgursoy/clerk/internal/server"
 	"go.uber.org/fx"
-	"partitioner/internal/config"
-	"partitioner/internal/server"
 )
 
-func StartHTTPServer(lc fx.Lifecycle, e *echo.Echo, c config.Config) {
+func StartHTTPServer(lc fx.Lifecycle, s server.Server, c config.Config) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			return server.Start(e, c)
-		},
-		OnStop: func(ctx context.Context) error {
-			return server.Stop(e)
+			return server.Start(s, c)
 		},
 	})
 }

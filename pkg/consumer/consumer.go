@@ -3,8 +3,8 @@ package consumer
 import (
 	"fmt"
 
-	"partitioner/internal/redis"
-	"partitioner/internal/usecases"
+	"github.com/denizgursoy/clerk/internal/redis"
+	"github.com/denizgursoy/clerk/internal/usecases"
 )
 
 type Consumer struct {
