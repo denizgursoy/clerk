@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 type ClerkClient struct {
@@ -65,7 +68,14 @@ func (c *ClerkClient) statPinging(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-time.Tick(time.Duration(c.config.KeepAliveDurationInSeconds) * time.Second):
-			_, _ = c.grpcClient.Ping(ctx, toProto(c.member))
+			_, err := c.grpcClient.Ping(ctx, toProto(c.member))
+			if err != nil {
+				if status, ok := status.FromError(err); ok {
+					// Check gRPC status code and message
+					log.Printf("gRPC status code: %d, message: %s", status.Code(), status.Message())
+				}
+				break
+			}
 		}
 	}
 }
@@ -82,13 +92,22 @@ func (c *ClerkClient) executeFunction(ctx context.Context) error {
 			return nil
 		default:
 			recv, err := stream.Recv()
+			if errors.Is(err, io.EOF) {
+				log.Err(err).Msg("stream is closed")
+			}
+			if err != nil {
+				if status, ok := status.FromError(err); ok {
+					// Check gRPC status code and message
+					log.Printf("gRPC status code: %d, message: %s", status.Code(), status.Message())
+				}
+				log.Err(err).Msg("streaming error")
+				break
+			}
+
 			log.Info().
 				Int64("ordinal", recv.Ordinal).
 				Int64("total", recv.Total).
 				Msg("got new partitions")
-			if err != nil {
-				log.Err(err).Msg("could not get from stream")
-			}
 			if err = c.fn(ctx, recv.Ordinal, recv.Total); err != nil {
 				log.Err(err).Msg("could not execute function")
 			}
