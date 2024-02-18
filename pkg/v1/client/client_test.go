@@ -10,7 +10,7 @@ import (
 var (
 	testConfig = ClerkServerConfig{
 		Address:                    "localhost:8080",
-		KeepAliveDurationInSeconds: 1,
+		KeepAliveDurationInSeconds: 20,
 	}
 	testContext = context.Background()
 )
@@ -20,12 +20,12 @@ func TestNewClerkClient(t *testing.T) {
 		client, err := NewClerkClient(testConfig)
 		require.NoError(t, err)
 
-		member, err := client.AddMember(testContext, "sds", A)
+		err = client.Start(testContext, "sds", A)
 		require.NoError(t, err)
-		require.NotZero(t, member)
 	})
 }
 
-func A(ctx context.Context, ordinal, total int64) {
+func A(ctx context.Context, ordinal, total int64) error {
 
+	return nil
 }

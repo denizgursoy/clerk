@@ -12,4 +12,4 @@ type Member struct {
 	ID    string
 }
 
-type Cre func(ctx context.Context, ordinal, total int64)
+type NotifyFunction func(ctx context.Context, ordinal, total int64) error

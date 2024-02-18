@@ -8,15 +8,15 @@ import (
 )
 
 type MemberUserCase struct {
-	repo MemberRepository
+	r MemberRepository
 }
 
 func NewMemberUserCase(repo MemberRepository) *MemberUserCase {
-	return &MemberUserCase{repo: repo}
+	return &MemberUserCase{r: repo}
 }
 
 func (m MemberUserCase) AddNewMemberToGroup(ctx context.Context, group string) (Member, error) {
-	id, err := m.repo.SaveNewMemberToGroup(ctx, group)
+	id, err := m.r.SaveNewMemberToGroup(ctx, group)
 	if err != nil {
 		return Member{}, fmt.Errorf("could not add new member: %w", err)
 	}
@@ -31,4 +31,8 @@ func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Mem
 	log.Info().Str("group", member.Group).Str("id", member.ID).Msg("got the ping")
 
 	return nil
+}
+
+func (m MemberUserCase) RemoveMember(ctx context.Context, member Member) error {
+	return m.r.DeleteMemberFrom(ctx, member)
 }

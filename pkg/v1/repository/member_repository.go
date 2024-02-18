@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"slices"
 
+	"github.com/denizgursoy/clerk/pkg/v1/usecases"
 	"github.com/google/uuid"
 )
 
@@ -25,4 +27,21 @@ func (m MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group st
 	m.members[group] = append(m.members[group], uuid)
 
 	return uuid, nil
+}
+
+func (m MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
+	members, ok := m.members[member.Group]
+	if !ok {
+		return usecases.ErrGroupNotFound
+	}
+
+	if slices.Contains(members, member.ID) {
+		m.members[member.Group] = slices.DeleteFunc(members, func(s string) bool {
+			return s == member.ID
+		})
+
+		return nil
+	}
+
+	return usecases.ErrMemberNotFound
 }

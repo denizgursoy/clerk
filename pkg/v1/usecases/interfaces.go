@@ -10,8 +10,10 @@ type Cache interface {
 type MemberUseCase interface {
 	AddNewMemberToGroup(ctx context.Context, group string) (Member, error)
 	GetHealthCheckFromMember(ctx context.Context, member Member) error
+	RemoveMember(ctx context.Context, member Member) error
 }
 
 type MemberRepository interface {
 	SaveNewMemberToGroup(ctx context.Context, group string) (string, error)
+	DeleteMemberFrom(ctx context.Context, member Member) error
 }

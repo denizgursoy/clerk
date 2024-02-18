@@ -3,25 +3,22 @@ import "google/protobuf/empty.proto";
 option go_package = "./proto";
 
 service MemberService {
-  rpc AddMember(MemberRequest) returns (MemberResponse);
-  rpc Ping(PingRequest) returns (google.protobuf.Empty) {}
+  rpc AddMember(MemberRequest) returns (Member){};
+  rpc Listen(Member) returns (stream Partition){};
+  rpc Ping(Member) returns (google.protobuf.Empty) {}
+  rpc RemoveMember(Member) returns (google.protobuf.Empty) {}
 }
 
 message MemberRequest{
   string group = 1;
 }
 
-
-message MemberResponse{
-  string group = 1;
-  string id = 2;
+message Partition {
+  int64 ordinal = 1;
+  int64 total = 2;
 }
 
-message PingRequest{
+message Member{
   string group = 1;
   string id = 2;
-}
-
-message PingResponse{
-
 }
