@@ -77,6 +77,7 @@ func (m MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx cont
 					return true
 				}
 			}
+
 			return false
 		})
 	}

@@ -19,6 +19,7 @@ type ClerkClient struct {
 	member     Member
 	fn         NotifyFunction
 	partition  proto.Partition
+	cancelFunc context.CancelFunc
 }
 
 func NewClerkClient(config ClerkServerConfig) (*ClerkClient, error) {
@@ -43,7 +44,8 @@ func (c *ClerkClient) Start(parentContext context.Context, group string, fn Noti
 		return ErrEmptyGroup
 	}
 
-	ctx, _ := context.WithCancel(parentContext)
+	ctx, cancel := context.WithCancel(parentContext)
+	c.cancelFunc = cancel
 	member, err := c.grpcClient.AddMember(ctx, &proto.MemberRequest{Group: group})
 	if err != nil {
 		return err
@@ -57,8 +59,20 @@ func (c *ClerkClient) Start(parentContext context.Context, group string, fn Noti
 }
 func (c *ClerkClient) Remove() error {
 	_, err := c.grpcClient.RemoveMember(context.Background(), toProto(c.member))
+	if err != nil {
+		return err
+	}
+	if err = c.terminate(); err != nil {
+		return err
+	}
 
-	return err
+	return nil
+}
+
+func (c *ClerkClient) terminate() error {
+	c.cancelFunc()
+
+	return nil
 }
 
 func (c *ClerkClient) statPinging(ctx context.Context) error {
