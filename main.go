@@ -20,6 +20,7 @@ func main() {
 		fx.Invoke(
 			handlers.NewMemberGRPCHandler,
 			StartGRPCServer,
+			StartBalance,
 		),
 	).Run()
 }

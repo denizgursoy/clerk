@@ -56,8 +56,8 @@ func (c *ClerkClient) Start(parentContext context.Context, group string, fn Noti
 
 	return nil
 }
-func (c *ClerkClient) Remove(ctx context.Context) error {
-	_, err := c.grpcClient.RemoveMember(ctx, toProto(c.member))
+func (c *ClerkClient) Remove() error {
+	_, err := c.grpcClient.RemoveMember(context.Background(), toProto(c.member))
 
 	return err
 }
