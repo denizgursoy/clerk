@@ -99,7 +99,7 @@ func (c *ClerkClient) executeFunction(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-time.Tick(time.Duration(c.config.KeepAliveDurationInSeconds) * time.Second):
-			partition, err := c.grpcClient.Listen(ctx, toProto(c.member))
+			partition, err := c.grpcClient.QueryPartition(ctx, toProto(c.member))
 			if err != nil {
 				if status, ok := status.FromError(err); ok {
 					// Check gRPC status code and message

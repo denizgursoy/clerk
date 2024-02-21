@@ -48,7 +48,7 @@ func (m MemberGRPCHandler) RemoveMember(ctx context.Context, member *proto.Membe
 	return new(empty.Empty), nil
 }
 
-func (m MemberGRPCHandler) Listen(ctx context.Context, member *proto.Member) (*proto.Partition, error) {
+func (m MemberGRPCHandler) QueryPartition(ctx context.Context, member *proto.Member) (*proto.Partition, error) {
 	partition, err := m.memberUseCase.GetPartitionOfTheMember(ctx, toMember(member))
 	if err != nil {
 		return new(proto.Partition), err

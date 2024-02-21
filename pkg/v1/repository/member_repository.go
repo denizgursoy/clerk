@@ -20,7 +20,7 @@ func NewMemberETCDRepository() *MemberETCDRepository {
 	}
 }
 
-func (m MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group string) (string, error) {
+func (m MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group string) (usecases.Member, error) {
 	uuid := uuid.New().String()
 	if len(m.members[group]) == 0 {
 		m.members[group] = make([]usecases.Member, 0)
@@ -29,10 +29,14 @@ func (m MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group st
 		Group:           group,
 		ID:              uuid,
 		LastUpdatedTime: nil,
+		Partition: usecases.Partition{
+			Ordinal: 1,
+			Total:   2,
+		},
 	}
 	m.members[group] = append(m.members[group], member)
 
-	return uuid, nil
+	return member, nil
 }
 
 func (m MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
@@ -91,6 +95,17 @@ func (m MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context
 	}
 
 	return findMember.Partition, nil
+}
+
+func (m MemberETCDRepository) SetPartitionOfTheMember(ctx context.Context,
+	member usecases.Member, p usecases.Partition) error {
+	findMember, err := m.findMember(member)
+	if err != nil {
+		return err
+	}
+	findMember.Partition = p
+
+	return nil
 }
 
 func (m MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {

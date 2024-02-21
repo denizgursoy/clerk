@@ -20,15 +20,12 @@ func NewMemberUserCase(r MemberRepository, c config.Config) *MemberUserCase {
 }
 
 func (m MemberUserCase) AddNewMemberToGroup(ctx context.Context, group string) (Member, error) {
-	id, err := m.r.SaveNewMemberToGroup(ctx, group)
+	member, err := m.r.SaveNewMemberToGroup(ctx, group)
 	if err != nil {
 		return Member{}, fmt.Errorf("could not add new member: %w", err)
 	}
-	log.Info().Str("group", group).Str("id", id).Msg("created new")
-	return Member{
-		Group: group,
-		ID:    id,
-	}, nil
+	log.Info().Str("group", group).Str("id", member.ID).Msg("created new")
+	return member, nil
 }
 
 func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Member) error {

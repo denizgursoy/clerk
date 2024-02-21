@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MemberServiceClient interface {
 	AddMember(ctx context.Context, in *MemberRequest, opts ...grpc.CallOption) (*Member, error)
-	Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error)
+	QueryPartition(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error)
 	Ping(ctx context.Context, in *Member, opts ...grpc.CallOption) (*empty.Empty, error)
 	RemoveMember(ctx context.Context, in *Member, opts ...grpc.CallOption) (*empty.Empty, error)
 }
@@ -42,9 +42,9 @@ func (c *memberServiceClient) AddMember(ctx context.Context, in *MemberRequest, 
 	return out, nil
 }
 
-func (c *memberServiceClient) Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error) {
+func (c *memberServiceClient) QueryPartition(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error) {
 	out := new(Partition)
-	err := c.cc.Invoke(ctx, "/MemberService/Listen", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/MemberService/QueryPartition", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (c *memberServiceClient) RemoveMember(ctx context.Context, in *Member, opts
 // for forward compatibility
 type MemberServiceServer interface {
 	AddMember(context.Context, *MemberRequest) (*Member, error)
-	Listen(context.Context, *Member) (*Partition, error)
+	QueryPartition(context.Context, *Member) (*Partition, error)
 	Ping(context.Context, *Member) (*empty.Empty, error)
 	RemoveMember(context.Context, *Member) (*empty.Empty, error)
 	mustEmbedUnimplementedMemberServiceServer()
@@ -87,8 +87,8 @@ type UnimplementedMemberServiceServer struct {
 func (UnimplementedMemberServiceServer) AddMember(context.Context, *MemberRequest) (*Member, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMember not implemented")
 }
-func (UnimplementedMemberServiceServer) Listen(context.Context, *Member) (*Partition, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Listen not implemented")
+func (UnimplementedMemberServiceServer) QueryPartition(context.Context, *Member) (*Partition, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryPartition not implemented")
 }
 func (UnimplementedMemberServiceServer) Ping(context.Context, *Member) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -127,20 +127,20 @@ func _MemberService_AddMember_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MemberService_Listen_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MemberService_QueryPartition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Member)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MemberServiceServer).Listen(ctx, in)
+		return srv.(MemberServiceServer).QueryPartition(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/MemberService/Listen",
+		FullMethod: "/MemberService/QueryPartition",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MemberServiceServer).Listen(ctx, req.(*Member))
+		return srv.(MemberServiceServer).QueryPartition(ctx, req.(*Member))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -193,8 +193,8 @@ var MemberService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MemberService_AddMember_Handler,
 		},
 		{
-			MethodName: "Listen",
-			Handler:    _MemberService_Listen_Handler,
+			MethodName: "QueryPartition",
+			Handler:    _MemberService_QueryPartition_Handler,
 		},
 		{
 			MethodName: "Ping",
