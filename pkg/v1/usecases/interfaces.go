@@ -16,6 +16,7 @@ type MemberUseCase interface {
 	RemoveMember(ctx context.Context, member Member) error
 	TriggerBalance()
 	StopBalance()
+	GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error)
 }
 
 type MemberRepository interface {
@@ -23,4 +24,5 @@ type MemberRepository interface {
 	DeleteMemberFrom(ctx context.Context, member Member) error
 	SaveLastUpdatedTime(ctx context.Context, member Member) error
 	RemoveAllMemberNotAvailableDuringDuration(ctx context.Context, seconds time.Duration) error
+	GetCurrentPartitionOfTheMember(ctx context.Context, member Member) (Partition, error)
 }

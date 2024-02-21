@@ -32,21 +32,36 @@ func (m MemberGRPCHandler) AddMember(ctx context.Context, request *proto.MemberR
 
 func (m MemberGRPCHandler) Ping(ctx context.Context, member *proto.Member) (*empty.Empty, error) {
 	err := m.memberUseCase.GetHealthCheckFromMember(ctx, toMember(member))
+	if err != nil {
+		return new(empty.Empty), err
+	}
 
-	return new(empty.Empty), err
+	return new(empty.Empty), nil
 }
 
 func (m MemberGRPCHandler) RemoveMember(ctx context.Context, member *proto.Member) (*empty.Empty, error) {
 	err := m.memberUseCase.RemoveMember(ctx, toMember(member))
+	if err != nil {
+		return new(empty.Empty), err
+	}
 
-	return new(empty.Empty), err
+	return new(empty.Empty), nil
 }
 
-func (m MemberGRPCHandler) Listen(context.Context, *proto.Member) (*proto.Partition, error) {
+func (m MemberGRPCHandler) Listen(ctx context.Context, member *proto.Member) (*proto.Partition, error) {
+	partition, err := m.memberUseCase.GetPartitionOfTheMember(ctx, toMember(member))
+	if err != nil {
+		return new(proto.Partition), err
+	}
+
+	return toProtoPartition(partition), nil
+}
+
+func toProtoPartition(p usecases.Partition) *proto.Partition {
 	return &proto.Partition{
-		Ordinal: 1,
-		Total:   2,
-	}, nil
+		Ordinal: p.Ordinal,
+		Total:   p.Total,
+	}
 }
 
 func toResponse(m usecases.Member) *proto.Member {

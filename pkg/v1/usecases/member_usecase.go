@@ -64,3 +64,7 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 
 	return nil
 }
+
+func (m MemberUserCase) GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error) {
+	return m.r.GetCurrentPartitionOfTheMember(ctx, member)
+}

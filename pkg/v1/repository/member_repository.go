@@ -53,17 +53,15 @@ func (m MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member useca
 }
 
 func (m MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member usecases.Member) error {
-	members := m.members[member.Group]
-	for i := range members {
-		if members[i].ID == member.ID {
-			now := time.Now()
-			members[i].LastUpdatedTime = &now
-
-			return nil
-		}
+	findMember, err := m.findMember(member)
+	if err != nil {
+		return err
 	}
 
-	return usecases.ErrMemberNotFound
+	now := time.Now()
+	findMember.LastUpdatedTime = &now
+
+	return nil
 }
 
 func (m MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
@@ -83,4 +81,25 @@ func (m MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx cont
 	}
 
 	return nil
+}
+
+func (m MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context,
+	member usecases.Member) (usecases.Partition, error) {
+	findMember, err := m.findMember(member)
+	if err != nil {
+		return usecases.Partition{}, err
+	}
+
+	return findMember.Partition, nil
+}
+
+func (m MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {
+	members := m.members[member.Group]
+	for i := range members {
+		if members[i].ID == member.ID {
+			return members[i], nil
+		}
+	}
+
+	return usecases.Member{}, usecases.ErrMemberNotFound
 }
