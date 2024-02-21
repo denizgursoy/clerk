@@ -1,7 +1,10 @@
 //go:generate mockgen -source=interfaces.go -destination=interfaces_mock.go -package=usecases
 package usecases
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Cache interface {
 	AddNewInstance() (int, error)
@@ -19,4 +22,5 @@ type MemberRepository interface {
 	SaveNewMemberToGroup(ctx context.Context, group string) (string, error)
 	DeleteMemberFrom(ctx context.Context, member Member) error
 	SaveLastUpdatedTime(ctx context.Context, member Member) error
+	RemoveAllMemberNotAvailableDuringDuration(ctx context.Context, seconds time.Duration) error
 }

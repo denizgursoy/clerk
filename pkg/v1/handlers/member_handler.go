@@ -2,13 +2,10 @@ package handlers
 
 import (
 	"context"
-	"math/rand"
-	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
 	"github.com/denizgursoy/clerk/proto"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
@@ -45,20 +42,11 @@ func (m MemberGRPCHandler) RemoveMember(ctx context.Context, member *proto.Membe
 	return new(empty.Empty), err
 }
 
-func (m MemberGRPCHandler) Listen(_ *proto.Member, l proto.MemberService_ListenServer) error {
-	for {
-		select {
-		case <-time.Tick(10 * time.Second):
-			log.Info().Msg("sending new partition")
-			err := l.Send(&proto.Partition{
-				Ordinal: rand.Int63(),
-				Total:   rand.Int63(),
-			})
-			if err != nil {
-				log.Err(err).Msg("error")
-			}
-		}
-	}
+func (m MemberGRPCHandler) Listen(context.Context, *proto.Member) (*proto.Partition, error) {
+	return &proto.Partition{
+		Ordinal: 1,
+		Total:   2,
+	}, nil
 }
 
 func toResponse(m usecases.Member) *proto.Member {

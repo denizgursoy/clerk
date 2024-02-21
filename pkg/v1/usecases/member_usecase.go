@@ -45,7 +45,7 @@ func (m MemberUserCase) TriggerBalance() {
 	defer m.t.Stop()
 
 	for range m.t.C {
-		if err := m.balance(); err != nil {
+		if err := m.balance(context.Background()); err != nil {
 			log.Err(err).Msg("balance error")
 		}
 	}
@@ -56,8 +56,11 @@ func (m MemberUserCase) StopBalance() {
 	m.t.Stop()
 }
 
-func (m MemberUserCase) balance() error {
-	log.Info().Msg("checking rebalance")
+func (m MemberUserCase) balance(ctx context.Context) error {
+	log.Info().Msg("checking balance")
+	if err := m.r.RemoveAllMemberNotAvailableDuringDuration(ctx, m.c.LifeSpanDurationInSeconds); err != nil {
+		return fmt.Errorf("could not remove all dead members: %w", err)
+	}
 
 	return nil
 }

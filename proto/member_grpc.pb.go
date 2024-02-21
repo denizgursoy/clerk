@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MemberServiceClient interface {
 	AddMember(ctx context.Context, in *MemberRequest, opts ...grpc.CallOption) (*Member, error)
-	Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (MemberService_ListenClient, error)
+	Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error)
 	Ping(ctx context.Context, in *Member, opts ...grpc.CallOption) (*empty.Empty, error)
 	RemoveMember(ctx context.Context, in *Member, opts ...grpc.CallOption) (*empty.Empty, error)
 }
@@ -42,36 +42,13 @@ func (c *memberServiceClient) AddMember(ctx context.Context, in *MemberRequest, 
 	return out, nil
 }
 
-func (c *memberServiceClient) Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (MemberService_ListenClient, error) {
-	stream, err := c.cc.NewStream(ctx, &MemberService_ServiceDesc.Streams[0], "/MemberService/Listen", opts...)
+func (c *memberServiceClient) Listen(ctx context.Context, in *Member, opts ...grpc.CallOption) (*Partition, error) {
+	out := new(Partition)
+	err := c.cc.Invoke(ctx, "/MemberService/Listen", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &memberServiceListenClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type MemberService_ListenClient interface {
-	Recv() (*Partition, error)
-	grpc.ClientStream
-}
-
-type memberServiceListenClient struct {
-	grpc.ClientStream
-}
-
-func (x *memberServiceListenClient) Recv() (*Partition, error) {
-	m := new(Partition)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *memberServiceClient) Ping(ctx context.Context, in *Member, opts ...grpc.CallOption) (*empty.Empty, error) {
@@ -97,7 +74,7 @@ func (c *memberServiceClient) RemoveMember(ctx context.Context, in *Member, opts
 // for forward compatibility
 type MemberServiceServer interface {
 	AddMember(context.Context, *MemberRequest) (*Member, error)
-	Listen(*Member, MemberService_ListenServer) error
+	Listen(context.Context, *Member) (*Partition, error)
 	Ping(context.Context, *Member) (*empty.Empty, error)
 	RemoveMember(context.Context, *Member) (*empty.Empty, error)
 	mustEmbedUnimplementedMemberServiceServer()
@@ -110,8 +87,8 @@ type UnimplementedMemberServiceServer struct {
 func (UnimplementedMemberServiceServer) AddMember(context.Context, *MemberRequest) (*Member, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddMember not implemented")
 }
-func (UnimplementedMemberServiceServer) Listen(*Member, MemberService_ListenServer) error {
-	return status.Errorf(codes.Unimplemented, "method Listen not implemented")
+func (UnimplementedMemberServiceServer) Listen(context.Context, *Member) (*Partition, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Listen not implemented")
 }
 func (UnimplementedMemberServiceServer) Ping(context.Context, *Member) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
@@ -150,25 +127,22 @@ func _MemberService_AddMember_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MemberService_Listen_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Member)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _MemberService_Listen_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Member)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(MemberServiceServer).Listen(m, &memberServiceListenServer{stream})
-}
-
-type MemberService_ListenServer interface {
-	Send(*Partition) error
-	grpc.ServerStream
-}
-
-type memberServiceListenServer struct {
-	grpc.ServerStream
-}
-
-func (x *memberServiceListenServer) Send(m *Partition) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(MemberServiceServer).Listen(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/MemberService/Listen",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemberServiceServer).Listen(ctx, req.(*Member))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _MemberService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -219,6 +193,10 @@ var MemberService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MemberService_AddMember_Handler,
 		},
 		{
+			MethodName: "Listen",
+			Handler:    _MemberService_Listen_Handler,
+		},
+		{
 			MethodName: "Ping",
 			Handler:    _MemberService_Ping_Handler,
 		},
@@ -227,12 +205,6 @@ var MemberService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MemberService_RemoveMember_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Listen",
-			Handler:       _MemberService_Listen_Handler,
-			ServerStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/member.proto",
 }

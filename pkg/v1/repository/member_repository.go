@@ -7,6 +7,7 @@ import (
 
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type MemberETCDRepository struct {
@@ -63,4 +64,22 @@ func (m MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member us
 	}
 
 	return usecases.ErrMemberNotFound
+}
+
+func (m MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
+	duration time.Duration) error {
+	for group, members := range m.members {
+		m.members[group] = slices.DeleteFunc(members, func(member usecases.Member) bool {
+			if member.LastUpdatedTime != nil {
+				if member.LastUpdatedTime.Add(duration).Before(time.Now()) {
+					log.Info().Str("id", member.ID).Msg("deleting")
+
+					return true
+				}
+			}
+			return false
+		})
+	}
+
+	return nil
 }

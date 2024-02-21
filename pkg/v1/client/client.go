@@ -2,9 +2,7 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -20,6 +18,7 @@ type ClerkClient struct {
 	grpcClient proto.MemberServiceClient
 	member     Member
 	fn         NotifyFunction
+	partition  proto.Partition
 }
 
 func NewClerkClient(config ClerkServerConfig) (*ClerkClient, error) {
@@ -81,38 +80,32 @@ func (c *ClerkClient) statPinging(ctx context.Context) error {
 }
 
 func (c *ClerkClient) executeFunction(ctx context.Context) error {
-	stream, err := c.grpcClient.Listen(ctx, toProto(c.member))
-	if err != nil {
-		return err
-	}
-
 	for {
 		select {
-		case <-stream.Context().Done():
+		case <-ctx.Done():
 			return nil
-		default:
-			recv, err := stream.Recv()
-			if errors.Is(err, io.EOF) {
-				log.Err(err).Msg("stream is closed")
-			}
+		case <-time.Tick(time.Duration(c.config.KeepAliveDurationInSeconds) * time.Second):
+			partition, err := c.grpcClient.Listen(ctx, toProto(c.member))
 			if err != nil {
 				if status, ok := status.FromError(err); ok {
 					// Check gRPC status code and message
 					log.Printf("gRPC status code: %d, message: %s", status.Code(), status.Message())
 				}
-				log.Err(err).Msg("streaming error")
+
 				break
 			}
 
-			log.Info().
-				Int64("ordinal", recv.Ordinal).
-				Int64("total", recv.Total).
-				Msg("got new partitions")
-			if err = c.fn(ctx, recv.Ordinal, recv.Total); err != nil {
-				log.Err(err).Msg("could not execute function")
+			if partition.Ordinal != c.partition.Ordinal ||
+				partition.Total != c.partition.Total {
+
+				c.partition.Ordinal = partition.Ordinal
+				c.partition.Total = partition.Total
+
+				c.fn(ctx, c.partition.Ordinal, c.partition.Total)
 			}
 		}
 	}
+
 }
 
 func convert(res *proto.Member) Member {
