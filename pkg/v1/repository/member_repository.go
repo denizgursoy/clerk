@@ -34,7 +34,6 @@ func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group s
 }
 
 func (m *MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
-
 	for i, mem := range members {
 		if mem.ID == member.ID {
 			members = slices.Delete(members, i, i+1)

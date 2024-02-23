@@ -18,7 +18,7 @@ func (m Member) IsActive(duration time.Duration) bool {
 		dateToUse = *m.LastUpdatedTime
 	}
 
-	return dateToUse.Add(duration).After(time.Now())
+	return dateToUse.Add(duration).Before(time.Now())
 }
 
 type Partition struct {
