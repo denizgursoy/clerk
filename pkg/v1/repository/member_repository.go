@@ -118,3 +118,17 @@ func (m MemberETCDRepository) findMember(member usecases.Member) (usecases.Membe
 
 	return usecases.Member{}, usecases.ErrMemberNotFound
 }
+
+func (m MemberETCDRepository) GetAllMembers(ctx context.Context) ([]usecases.Member, error) {
+	members := make([]usecases.Member, 0)
+	for _, i := range m.members {
+		members = append(members, i...)
+	}
+	return members, nil
+}
+
+func (m MemberETCDRepository) DeleteMembers(ctx context.Context, members []usecases.Member) error {
+	// TODO implement me
+	// panic("implement me")
+	return nil
+}
