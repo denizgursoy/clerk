@@ -48,26 +48,14 @@ func (m *MemberGroup) Add(member Member) {
 	m.allMembers = append(m.allMembers, member)
 }
 
-func (m *MemberGroup) UnstableMembers(lifeTime time.Duration) []Member {
-	members := make([]Member, 0)
+func (m *MemberGroup) IsAllMembersStable(lifeTime time.Duration) bool {
 	for i := range m.allMembers {
 		if !m.allMembers[i].IsActive(lifeTime) {
-			members = append(members, m.allMembers[i])
+			return false
 		}
 	}
 
-	return members
-}
-
-func (m *MemberGroup) StableMembers(lifeTime time.Duration) []Member {
-	members := make([]Member, 0)
-	for i := range m.allMembers {
-		if m.allMembers[i].IsActive(lifeTime) {
-			members = append(members, m.allMembers[i])
-		}
-	}
-
-	return members
+	return true
 }
 
 func (m *MemberGroup) RearrangeOrders() {

@@ -10,14 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var members = make([]usecases.Member, 0)
+
 type MemberETCDRepository struct {
-	members []usecases.Member
 }
 
 func NewMemberETCDRepository() *MemberETCDRepository {
-	return &MemberETCDRepository{
-		members: make([]usecases.Member, 0),
-	}
+	return &MemberETCDRepository{}
 }
 
 func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group string) (usecases.Member, error) {
@@ -29,16 +28,16 @@ func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group s
 		LastUpdatedTime: nil,
 		CreatedAt:       time.Now(),
 	}
-	m.members = append(m.members, member)
+	members = append(members, member)
 
 	return member, nil
 }
 
 func (m *MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
 
-	for i, mem := range m.members {
+	for i, mem := range members {
 		if mem.ID == member.ID {
-			m.members = slices.Delete(m.members, i, i+1)
+			members = slices.Delete(members, i, i+1)
 
 			return nil
 		}
@@ -62,7 +61,7 @@ func (m *MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member u
 func (m *MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
 	duration time.Duration) error {
 
-	m.members = slices.DeleteFunc(m.members, func(member usecases.Member) bool {
+	members = slices.DeleteFunc(members, func(member usecases.Member) bool {
 		if member.LastUpdatedTime != nil {
 			if member.LastUpdatedTime.Add(duration).Before(time.Now()) {
 				log.Info().Str("id", member.ID).Msg("deleting")
@@ -99,9 +98,9 @@ func (m *MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Contex
 // }
 
 func (m *MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {
-	for i := range m.members {
-		if m.members[i].ID == member.ID {
-			return m.members[i], nil
+	for i := range members {
+		if members[i].ID == member.ID {
+			return members[i], nil
 		}
 	}
 
@@ -109,7 +108,7 @@ func (m *MemberETCDRepository) findMember(member usecases.Member) (usecases.Memb
 }
 
 func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]usecases.Member, error) {
-	return m.members, nil
+	return members, nil
 }
 
 func (m *MemberETCDRepository) DeleteMembers(ctx context.Context, members []usecases.Member) error {
@@ -119,10 +118,10 @@ func (m *MemberETCDRepository) DeleteMembers(ctx context.Context, members []usec
 }
 
 func (m *MemberETCDRepository) UpdatePartitions(ctx context.Context, idPartitionMap map[string]usecases.Partition) error {
-	for i := range m.members {
-		partition, ok := idPartitionMap[m.members[i].ID]
+	for i := range members {
+		partition, ok := idPartitionMap[members[i].ID]
 		if ok {
-			m.members[i].Partition = partition
+			members[i].Partition = partition
 		}
 	}
 

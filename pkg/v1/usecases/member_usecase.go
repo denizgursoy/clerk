@@ -65,8 +65,10 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 
 	groups := ConvertToMembersToGroups(members)
 	for i := range groups {
-		stableMembers := groups[i].StableMembers(m.c.LifeSpanDuration)
-		m.setNewOrdinals(ctx, stableMembers)
+		if groups[i].IsAllMembersStable(m.c.LifeSpanDuration) {
+			log.Info().Str("group", groups[i].Group()).Msg("setting ordinal again")
+			m.setNewOrdinals(ctx, groups[i].allMembers)
+		}
 	}
 
 	return nil
