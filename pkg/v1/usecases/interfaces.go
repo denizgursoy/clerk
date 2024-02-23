@@ -23,7 +23,8 @@ type MemberRepository interface {
 	DeleteMemberFrom(ctx context.Context, member Member) error
 	SaveLastUpdatedTime(ctx context.Context, member Member) error
 	GetCurrentPartitionOfTheMember(ctx context.Context, member Member) (Partition, error)
-	SetPartitionOfTheMember(ctx context.Context, member Member, p Partition) error
+	// SetPartitionOfTheMember(ctx context.Context, member Member, p Partition) error
 	GetAllMembers(ctx context.Context) ([]Member, error)
 	DeleteMembers(ctx context.Context, members []Member) error
+	UpdatePartitions(ctx context.Context, idPartitionMap map[string]Partition) error
 }

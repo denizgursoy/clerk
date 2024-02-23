@@ -22,13 +22,12 @@ func (m Member) IsActive(duration time.Duration) bool {
 }
 
 type Partition struct {
-	Ordinal int64
-	Total   int64
+	Ordinal int
+	Total   int
 }
 
 type MemberGroup struct {
-	allMembers      []Member
-	unstableMembers []Member
+	allMembers []Member
 }
 
 func NewMemberGroup() *MemberGroup {
@@ -50,13 +49,25 @@ func (m *MemberGroup) Add(member Member) {
 }
 
 func (m *MemberGroup) UnstableMembers(lifeTime time.Duration) []Member {
+	members := make([]Member, 0)
 	for i := range m.allMembers {
 		if !m.allMembers[i].IsActive(lifeTime) {
-			m.unstableMembers = append(m.unstableMembers, m.allMembers[i])
+			members = append(members, m.allMembers[i])
 		}
 	}
 
-	return m.unstableMembers
+	return members
+}
+
+func (m *MemberGroup) StableMembers(lifeTime time.Duration) []Member {
+	members := make([]Member, 0)
+	for i := range m.allMembers {
+		if m.allMembers[i].IsActive(lifeTime) {
+			members = append(members, m.allMembers[i])
+		}
+	}
+
+	return members
 }
 
 func (m *MemberGroup) RearrangeOrders() {

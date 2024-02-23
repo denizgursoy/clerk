@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	NotifyFunction func(ctx context.Context, ordinal, total int64) error
+	NotifyFunction func(ctx context.Context, ordinal, total int) error
 	MemberConfig   struct {
 		KeepAliveDuration time.Duration
 	}
@@ -52,6 +52,7 @@ func (m *Member) Start(c context.Context, fn NotifyFunction) error {
 	}
 	ctx, cancelFunc := context.WithCancel(c)
 	m.cancelFunc = cancelFunc
+	m.fn = fn
 
 	go m.executeFunction(ctx)
 	m.statPinging(ctx)
@@ -64,7 +65,7 @@ func (m *Member) statPinging(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.Tick(time.Duration(m.config.KeepAliveDuration) * time.Second):
+		case <-time.Tick(m.config.KeepAliveDuration):
 			_, err := m.grpcClient.Ping(ctx, toProto(m))
 			if err != nil {
 				if errStatus, ok := status.FromError(err); ok {
@@ -82,7 +83,7 @@ func (m *Member) executeFunction(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.Tick(time.Duration(m.config.KeepAliveDuration) * time.Second):
+		case <-time.Tick(m.config.KeepAliveDuration):
 			partition, err := m.grpcClient.QueryPartition(ctx, toProto(m))
 			if err != nil {
 				if errorStatus, ok := status.FromError(err); ok {
@@ -99,7 +100,7 @@ func (m *Member) executeFunction(ctx context.Context) error {
 				m.partition.Ordinal = partition.Ordinal
 				m.partition.Total = partition.Total
 
-				m.fn(ctx, m.partition.Ordinal, m.partition.Total)
+				m.fn(ctx, int(m.partition.Ordinal), int(m.partition.Total))
 			}
 		}
 	}

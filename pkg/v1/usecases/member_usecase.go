@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/config"
@@ -64,16 +65,58 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 
 	groups := ConvertToMembersToGroups(members)
 	for i := range groups {
-		if unstableMembers := groups[i].UnstableMembers(m.c.LifeSpanDurationInSeconds); len(unstableMembers) > 0 {
-			log.Info().Str("group", groups[i].Group()).Msg("is not stable")
-			if err := m.r.DeleteMembers(ctx, unstableMembers); err != nil {
-				return fmt.Errorf("could not remove all dead allMembers: %w", err)
-			}
-			groups[i].RearrangeOrders()
-		}
+		stableMembers := groups[i].StableMembers(m.c.LifeSpanDuration)
+		m.setNewOrdinals(ctx, stableMembers)
 	}
 
 	return nil
+}
+
+func (m MemberUserCase) setNewOrdinals(ctx context.Context, stableMembers []Member) {
+	allCount := len(stableMembers)
+	usedOrdinals := getCurrentUsedOrdinals(stableMembers)
+	name := make(map[string]Partition)
+	for i := range stableMembers {
+		if !isValidOrdinal(stableMembers[i].Ordinal, allCount) {
+			ordinal := getFirstUnusedOrdinal(usedOrdinals, allCount)
+			stableMembers[i].Ordinal = ordinal
+			usedOrdinals = append(usedOrdinals, ordinal)
+		}
+		stableMembers[i].Total = allCount
+		name[stableMembers[i].ID] = stableMembers[i].Partition
+	}
+
+	m.r.UpdatePartitions(ctx, name)
+}
+
+func isValidOrdinal(ordinal, allCount int) bool {
+	if ordinal == 0 || ordinal > allCount {
+		return false
+	}
+
+	return true
+}
+
+func getFirstUnusedOrdinal(ordinals []int, count int) int {
+	for i := 1; i <= count; i++ {
+		if !slices.Contains(ordinals, i) {
+			return i
+		}
+	}
+
+	return 0
+}
+
+func getCurrentUsedOrdinals(stableMembers []Member) []int {
+	usedOrdinals := make([]int, 0)
+	for i := range stableMembers {
+		ordinal := stableMembers[i].Ordinal
+		if ordinal != 0 {
+			usedOrdinals = append(usedOrdinals, ordinal)
+		}
+	}
+
+	return usedOrdinals
 }
 
 func (m MemberUserCase) GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error) {

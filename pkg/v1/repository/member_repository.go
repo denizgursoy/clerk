@@ -11,43 +11,34 @@ import (
 )
 
 type MemberETCDRepository struct {
-	members map[string][]usecases.Member
+	members []usecases.Member
 }
 
 func NewMemberETCDRepository() *MemberETCDRepository {
 	return &MemberETCDRepository{
-		members: make(map[string][]usecases.Member),
+		members: make([]usecases.Member, 0),
 	}
 }
 
-func (m MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group string) (usecases.Member, error) {
+func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group string) (usecases.Member, error) {
 	uuid := uuid.New().String()
-	if len(m.members[group]) == 0 {
-		m.members[group] = make([]usecases.Member, 0)
-	}
+
 	member := usecases.Member{
 		Group:           group,
 		ID:              uuid,
 		LastUpdatedTime: nil,
-		Partition: usecases.Partition{
-			Ordinal: 1,
-			Total:   2,
-		},
+		CreatedAt:       time.Now(),
 	}
-	m.members[group] = append(m.members[group], member)
+	m.members = append(m.members, member)
 
 	return member, nil
 }
 
-func (m MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
-	members, ok := m.members[member.Group]
-	if !ok {
-		return usecases.ErrGroupNotFound
-	}
+func (m *MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
 
-	for i, m := range members {
-		if m.ID == member.ID {
-			members = slices.Delete(members, i, i+1)
+	for i, mem := range m.members {
+		if mem.ID == member.ID {
+			m.members = slices.Delete(m.members, i, i+1)
 
 			return nil
 		}
@@ -56,7 +47,7 @@ func (m MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member useca
 	return usecases.ErrMemberNotFound
 }
 
-func (m MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member usecases.Member) error {
+func (m *MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member usecases.Member) error {
 	findMember, err := m.findMember(member)
 	if err != nil {
 		return err
@@ -68,26 +59,25 @@ func (m MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member us
 	return nil
 }
 
-func (m MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
+func (m *MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
 	duration time.Duration) error {
-	for group, members := range m.members {
-		m.members[group] = slices.DeleteFunc(members, func(member usecases.Member) bool {
-			if member.LastUpdatedTime != nil {
-				if member.LastUpdatedTime.Add(duration).Before(time.Now()) {
-					log.Info().Str("id", member.ID).Msg("deleting")
 
-					return true
-				}
+	m.members = slices.DeleteFunc(m.members, func(member usecases.Member) bool {
+		if member.LastUpdatedTime != nil {
+			if member.LastUpdatedTime.Add(duration).Before(time.Now()) {
+				log.Info().Str("id", member.ID).Msg("deleting")
+
+				return true
 			}
+		}
 
-			return false
-		})
-	}
+		return false
+	})
 
 	return nil
 }
 
-func (m MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context,
+func (m *MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context,
 	member usecases.Member) (usecases.Partition, error) {
 	findMember, err := m.findMember(member)
 	if err != nil {
@@ -97,38 +87,44 @@ func (m MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context
 	return findMember.Partition, nil
 }
 
-func (m MemberETCDRepository) SetPartitionOfTheMember(ctx context.Context,
-	member usecases.Member, p usecases.Partition) error {
-	findMember, err := m.findMember(member)
-	if err != nil {
-		return err
-	}
-	findMember.Partition = p
+// func (m MemberETCDRepository) SetPartitionOfTheMember(ctx context.Context,
+// 	member usecases.Member, p usecases.Partition) error {
+// 	findMember, err := m.findMember(member)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	findMember.Partition = p
+//
+// 	return nil
+// }
 
-	return nil
-}
-
-func (m MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {
-	members := m.members[member.Group]
-	for i := range members {
-		if members[i].ID == member.ID {
-			return members[i], nil
+func (m *MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {
+	for i := range m.members {
+		if m.members[i].ID == member.ID {
+			return m.members[i], nil
 		}
 	}
 
 	return usecases.Member{}, usecases.ErrMemberNotFound
 }
 
-func (m MemberETCDRepository) GetAllMembers(ctx context.Context) ([]usecases.Member, error) {
-	members := make([]usecases.Member, 0)
-	for _, i := range m.members {
-		members = append(members, i...)
-	}
-	return members, nil
+func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]usecases.Member, error) {
+	return m.members, nil
 }
 
-func (m MemberETCDRepository) DeleteMembers(ctx context.Context, members []usecases.Member) error {
+func (m *MemberETCDRepository) DeleteMembers(ctx context.Context, members []usecases.Member) error {
 	// TODO implement me
 	// panic("implement me")
+	return nil
+}
+
+func (m *MemberETCDRepository) UpdatePartitions(ctx context.Context, idPartitionMap map[string]usecases.Partition) error {
+	for i := range m.members {
+		partition, ok := idPartitionMap[m.members[i].ID]
+		if ok {
+			m.members[i].Partition = partition
+		}
+	}
+
 	return nil
 }

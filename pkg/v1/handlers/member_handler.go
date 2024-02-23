@@ -59,8 +59,8 @@ func (m MemberGRPCHandler) QueryPartition(ctx context.Context, member *proto.Mem
 
 func toProtoPartition(p usecases.Partition) *proto.Partition {
 	return &proto.Partition{
-		Ordinal: p.Ordinal,
-		Total:   p.Total,
+		Ordinal: int32(p.Ordinal),
+		Total:   int32(p.Total),
 	}
 }
 
