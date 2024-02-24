@@ -4,9 +4,11 @@ import (
 	"context"
 
 	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/denizgursoy/clerk/pkg/v1/repository"
 	"github.com/denizgursoy/clerk/pkg/v1/server"
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
 	"github.com/rs/zerolog/log"
+	"go.etcd.io/etcd/client/v3"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 )
@@ -46,6 +48,14 @@ func StartBalance(lc fx.Lifecycle, m usecases.MemberUseCase) {
 			m.StopBalance()
 
 			return nil
+		},
+	})
+}
+
+func StopETCDClientOnShutDown(lc fx.Lifecycle, c *clientv3.Client) {
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			return repository.Stop(c)
 		},
 	})
 }

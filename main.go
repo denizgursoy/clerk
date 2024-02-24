@@ -14,6 +14,7 @@ func main() {
 		fx.Provide(
 			server.NewGRPCServer,
 			config.CreateConfig,
+			repository.CreateETCDClient,
 			fx.Annotate(usecases.NewMemberUserCase, fx.As(new(usecases.MemberUseCase))),
 			fx.Annotate(repository.NewMemberETCDRepository, fx.As(new(usecases.MemberRepository))),
 		),
@@ -21,6 +22,7 @@ func main() {
 			handlers.NewMemberGRPCHandler,
 			StartGRPCServer,
 			StartBalance,
+			StopETCDClientOnShutDown,
 		),
 	).Run()
 }

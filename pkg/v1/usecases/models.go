@@ -10,10 +10,10 @@ var DefaultPartition = Partition{
 }
 
 type Member struct {
-	Group           string
-	ID              string
-	LastUpdatedTime *time.Time
-	CreatedAt       time.Time
+	Group           string     `json:"group"`
+	ID              string     `json:"id"`
+	LastUpdatedTime *time.Time `json:"lastUpdatedTime"`
+	CreatedAt       time.Time  `json:"createdAt"`
 	Partition
 }
 
@@ -28,8 +28,8 @@ func (m Member) LastActiveDate() time.Time {
 }
 
 type Partition struct {
-	Ordinal int
-	Total   int
+	Ordinal int `json:"ordinal"`
+	Total   int `json:"total"`
 }
 
 type MemberGroup struct {
