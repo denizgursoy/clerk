@@ -36,3 +36,25 @@ func (s *ETCDTestSuite) TestGetAllMembers() {
 	require.NoError(s.T(), err)
 	require.Len(s.T(), allMembers, 2)
 }
+
+func (s *ETCDTestSuite) Test_FindMemberByID() {
+	ctx := context.Background()
+	expectedMember, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
+	require.NoError(s.T(), err)
+
+	actualMember, err := s.r.FindMemberByID(ctx, expectedMember.ID)
+	require.NoError(s.T(), err)
+	require.NotZero(s.T(), actualMember)
+}
+
+func (s *ETCDTestSuite) Test_DeleteMemberFrom() {
+	ctx := context.Background()
+	expectedMember, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
+	require.NoError(s.T(), err)
+
+	err = s.r.DeleteMemberFrom(ctx, expectedMember)
+	require.NoError(s.T(), err)
+
+	_, err = s.r.FindMemberByID(ctx, expectedMember.ID)
+	require.ErrorIs(s.T(), err, usecases.ErrMemberNotFound)
+}

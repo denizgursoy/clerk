@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
@@ -20,12 +19,12 @@ const (
 )
 
 type MemberETCDRepository struct {
-	etcdClient *clientv3.Client
+	e *clientv3.Client
 }
 
 func NewMemberETCDRepository(c *clientv3.Client) *MemberETCDRepository {
 	return &MemberETCDRepository{
-		etcdClient: c,
+		e: c,
 	}
 }
 
@@ -40,7 +39,7 @@ func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group s
 	if err != nil {
 		return usecases.Member{}, fmt.Errorf("could not marshal member: %w", err)
 	}
-	_, err = m.etcdClient.Put(ctx, member.ID, string(marshal))
+	_, err = m.e.Put(ctx, member.ID, string(marshal))
 	if err != nil {
 		return usecases.Member{}, fmt.Errorf("could not save member to etcd: %w", err)
 	}
@@ -49,19 +48,19 @@ func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group s
 }
 
 func (m *MemberETCDRepository) DeleteMemberFrom(ctx context.Context, member usecases.Member) error {
-	for i, mem := range members {
-		if mem.ID == member.ID {
-			members = slices.Delete(members, i, i+1)
-
-			return nil
-		}
+	response, err := m.e.Delete(ctx, member.ID)
+	if err != nil {
+		return fmt.Errorf("could not delete member: %w", err)
+	}
+	if response.Deleted == 0 {
+		return usecases.ErrMemberNotFound
 	}
 
-	return usecases.ErrMemberNotFound
+	return nil
 }
 
 func (m *MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member usecases.Member) error {
-	findMember, err := m.findMember(member)
+	findMember, err := m.FindMemberByID(ctx, member.ID)
 	if err != nil {
 		return err
 	}
@@ -74,7 +73,7 @@ func (m *MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member u
 
 func (m *MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Context,
 	member usecases.Member) (usecases.Partition, error) {
-	findMember, err := m.findMember(member)
+	findMember, err := m.FindMemberByID(ctx, member.ID)
 	if err != nil {
 		return usecases.Partition{}, err
 	}
@@ -82,20 +81,26 @@ func (m *MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Contex
 	return findMember.Partition, nil
 }
 
-func (m *MemberETCDRepository) findMember(member usecases.Member) (*usecases.Member, error) {
-	for i := range members {
-		if members[i].ID == member.ID {
-			return members[i], nil
-		}
+func (m *MemberETCDRepository) FindMemberByID(ctx context.Context, id string) (*usecases.Member, error) {
+	response, err := m.e.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch the member: %w", err)
+	}
+	if response.Count != 1 {
+		return nil, usecases.ErrMemberNotFound
+	}
+	member := &usecases.Member{}
+	if err = json.Unmarshal(response.Kvs[0].Value, member); err != nil {
+		return nil, fmt.Errorf("could not unmarshall member: %w", err)
 	}
 
-	return nil, usecases.ErrMemberNotFound
+	return member, nil
 }
 
 func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]*usecases.Member, error) {
-	allClerkRecords, err := m.etcdClient.Get(ctx, ETCDRecordPrefix, clientv3.WithPrefix())
+	allClerkRecords, err := m.e.Get(ctx, ETCDRecordPrefix, clientv3.WithPrefix())
 	if err != nil {
-		return nil, fmt.Errorf("could not fet all members: %w", err)
+		return nil, fmt.Errorf("could not fetch all members: %w", err)
 	}
 	members := make([]*usecases.Member, allClerkRecords.Count)
 	for i := range allClerkRecords.Kvs {
