@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+var DefaultPartition = Partition{
+	Ordinal: 0,
+	Total:   0,
+}
+
 type Member struct {
 	Group           string
 	ID              string
@@ -12,13 +17,14 @@ type Member struct {
 	Partition
 }
 
-func (m Member) IsActive(duration time.Duration) bool {
-	dateToUse := m.CreatedAt
+func (m Member) IsActiveForTheLast(duration time.Duration) bool {
+	return m.LastActiveDate().Add(duration).After(time.Now())
+}
+func (m Member) LastActiveDate() time.Time {
 	if m.LastUpdatedTime != nil {
-		dateToUse = *m.LastUpdatedTime
+		return *m.LastUpdatedTime
 	}
-
-	return dateToUse.Add(duration).Before(time.Now())
+	return m.CreatedAt
 }
 
 type Partition struct {
@@ -27,12 +33,12 @@ type Partition struct {
 }
 
 type MemberGroup struct {
-	allMembers []Member
+	allMembers []*Member
 }
 
 func NewMemberGroup() *MemberGroup {
 	return &MemberGroup{
-		allMembers: make([]Member, 0),
+		allMembers: make([]*Member, 0),
 	}
 }
 
@@ -44,18 +50,22 @@ func (m *MemberGroup) Partition() string {
 	return m.allMembers[0].Group
 }
 
-func (m *MemberGroup) Add(member Member) {
+func (m *MemberGroup) Add(member *Member) {
 	m.allMembers = append(m.allMembers, member)
 }
 
-func (m *MemberGroup) IsAllMembersStable(lifeTime time.Duration) bool {
+func (m *MemberGroup) StableAndUnstableMembers(d time.Duration) ([]*Member, []*Member) {
+	stableMembers := make([]*Member, 0)
+	unstableMembers := make([]*Member, 0)
 	for i := range m.allMembers {
-		if !m.allMembers[i].IsActive(lifeTime) {
-			return false
+		if m.allMembers[i].IsActiveForTheLast(d) {
+			stableMembers = append(stableMembers, m.allMembers[i])
+		} else {
+			unstableMembers = append(unstableMembers, m.allMembers[i])
 		}
 	}
 
-	return true
+	return stableMembers, unstableMembers
 }
 
 func (m *MemberGroup) RearrangeOrders() {

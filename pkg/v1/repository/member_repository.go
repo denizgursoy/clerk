@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var members = make([]usecases.Member, 0)
+var members = make([]*usecases.Member, 0)
 
 type MemberETCDRepository struct {
 }
@@ -28,7 +28,7 @@ func (m *MemberETCDRepository) SaveNewMemberToGroup(ctx context.Context, group s
 		LastUpdatedTime: nil,
 		CreatedAt:       time.Now(),
 	}
-	members = append(members, member)
+	members = append(members, &member)
 
 	return member, nil
 }
@@ -60,7 +60,7 @@ func (m *MemberETCDRepository) SaveLastUpdatedTime(ctx context.Context, member u
 func (m *MemberETCDRepository) RemoveAllMemberNotAvailableDuringDuration(ctx context.Context,
 	duration time.Duration) error {
 
-	members = slices.DeleteFunc(members, func(member usecases.Member) bool {
+	members = slices.DeleteFunc(members, func(member *usecases.Member) bool {
 		if member.LastUpdatedTime != nil {
 			if member.LastUpdatedTime.Add(duration).Before(time.Now()) {
 				log.Info().Str("id", member.ID).Msg("deleting")
@@ -85,35 +85,18 @@ func (m *MemberETCDRepository) GetCurrentPartitionOfTheMember(ctx context.Contex
 	return findMember.Partition, nil
 }
 
-// func (m MemberETCDRepository) SetPartitionOfTheMember(ctx context.Context,
-// 	member usecases.Member, p usecases.Partition) error {
-// 	findMember, err := m.findMember(member)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	findMember.Partition = p
-//
-// 	return nil
-// }
-
-func (m *MemberETCDRepository) findMember(member usecases.Member) (usecases.Member, error) {
+func (m *MemberETCDRepository) findMember(member usecases.Member) (*usecases.Member, error) {
 	for i := range members {
 		if members[i].ID == member.ID {
 			return members[i], nil
 		}
 	}
 
-	return usecases.Member{}, usecases.ErrMemberNotFound
+	return nil, usecases.ErrMemberNotFound
 }
 
-func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]usecases.Member, error) {
+func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]*usecases.Member, error) {
 	return members, nil
-}
-
-func (m *MemberETCDRepository) DeleteMembers(ctx context.Context, members []usecases.Member) error {
-	// TODO implement me
-	// panic("implement me")
-	return nil
 }
 
 func (m *MemberETCDRepository) UpdatePartitions(ctx context.Context, idPartitionMap map[string]usecases.Partition) error {

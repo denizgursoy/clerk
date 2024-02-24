@@ -65,19 +65,23 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 
 	groups := ConvertToMembersToGroups(members)
 	for i := range groups {
-		if groups[i].IsAllMembersStable(m.c.LifeSpanDuration) {
-			log.Info().Str("group", groups[i].Group()).Msg("setting ordinal again")
-			m.setNewOrdinals(ctx, groups[i].allMembers)
-		}
+		stableMembers, unstableMembers := groups[i].StableAndUnstableMembers(m.c.LifeSpanDuration)
+		log.Info().
+			Str("group", groups[i].Group()).
+			Int("unstable member count", len(unstableMembers)).
+			Int("stable member count", len(stableMembers)).
+			Msg("setting ordinal again")
+		m.ClearOrdinals(ctx, unstableMembers)
+		m.setNewOrdinals(ctx, stableMembers)
 	}
 
 	return nil
 }
 
-func (m MemberUserCase) setNewOrdinals(ctx context.Context, stableMembers []Member) {
+func (m MemberUserCase) setNewOrdinals(ctx context.Context, stableMembers []*Member) {
 	allCount := len(stableMembers)
 	usedOrdinals := getCurrentUsedOrdinals(stableMembers)
-	name := make(map[string]Partition)
+	idPartitionMap := make(map[string]Partition)
 	for i := range stableMembers {
 		if !isValidOrdinal(stableMembers[i].Ordinal, allCount) {
 			ordinal := getFirstUnusedOrdinal(usedOrdinals, allCount)
@@ -85,10 +89,13 @@ func (m MemberUserCase) setNewOrdinals(ctx context.Context, stableMembers []Memb
 			usedOrdinals = append(usedOrdinals, ordinal)
 		}
 		stableMembers[i].Total = allCount
-		name[stableMembers[i].ID] = stableMembers[i].Partition
+		idPartitionMap[stableMembers[i].ID] = stableMembers[i].Partition
 	}
 
-	m.r.UpdatePartitions(ctx, name)
+	if err := m.r.UpdatePartitions(ctx, idPartitionMap); err != nil {
+		log.Err(err).Msg("could not update the partitions")
+	}
+	log.Info().Msg("update partition successfully")
 }
 
 func isValidOrdinal(ordinal, allCount int) bool {
@@ -109,7 +116,7 @@ func getFirstUnusedOrdinal(ordinals []int, count int) int {
 	return 0
 }
 
-func getCurrentUsedOrdinals(stableMembers []Member) []int {
+func getCurrentUsedOrdinals(stableMembers []*Member) []int {
 	usedOrdinals := make([]int, 0)
 	for i := range stableMembers {
 		ordinal := stableMembers[i].Ordinal
@@ -125,7 +132,21 @@ func (m MemberUserCase) GetPartitionOfTheMember(ctx context.Context, member Memb
 	return m.r.GetCurrentPartitionOfTheMember(ctx, member)
 }
 
-func ConvertToMembersToGroups(members []Member) []*MemberGroup {
+func (m MemberUserCase) ClearOrdinals(ctx context.Context, unStableMembers []*Member) error {
+	idPartitionMap := make(map[string]Partition)
+	for i := range unStableMembers {
+		idPartitionMap[unStableMembers[i].ID] = DefaultPartition
+	}
+	if err := m.r.UpdatePartitions(ctx, idPartitionMap); err != nil {
+		log.Err(err).Msg("could not update unstable partitions")
+
+		return fmt.Errorf("could not update partiion of unstable: %w", err)
+	}
+
+	return nil
+}
+
+func ConvertToMembersToGroups(members []*Member) []*MemberGroup {
 	allGroups := make(map[string]*MemberGroup)
 	for i := range members {
 		groupName := members[i].Group
