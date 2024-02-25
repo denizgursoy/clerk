@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,12 +17,19 @@ type MemberUserCase struct {
 	t *time.Ticker
 }
 
+const IDPrefix = "clerk"
+
 func NewMemberUserCase(r MemberRepository, c config.Config) *MemberUserCase {
 	return &MemberUserCase{r: r, c: c, t: time.NewTicker(c.CheckDuration)}
 }
 
 func (m MemberUserCase) AddNewMemberToGroup(ctx context.Context, group string) (Member, error) {
-	member, err := m.r.SaveNewMemberToGroup(ctx, group)
+	member := Member{
+		Group:     group,
+		ID:        GenerateMemberName(group, uuid.New().String()),
+		CreatedAt: time.Now(),
+	}
+	err := m.r.SaveNewMember(ctx, member)
 	if err != nil {
 		return Member{}, fmt.Errorf("could not add new member: %w", err)
 	}
@@ -33,11 +41,11 @@ func (m MemberUserCase) AddNewMemberToGroup(ctx context.Context, group string) (
 func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Member) error {
 	log.Info().Str("group", member.Group).Str("id", member.ID).Msg("got the ping")
 
-	return m.r.SaveLastUpdatedTime(ctx, member)
+	return m.r.SaveLastUpdatedTimeByID(ctx, member.ID, time.Now())
 }
 
 func (m MemberUserCase) RemoveMember(ctx context.Context, member Member) error {
-	return m.r.DeleteMemberFrom(ctx, member)
+	return m.r.DeleteMemberByID(ctx, member.ID)
 }
 
 func (m MemberUserCase) TriggerBalance() {
@@ -129,7 +137,7 @@ func getCurrentUsedOrdinals(stableMembers []*Member) []int {
 }
 
 func (m MemberUserCase) GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error) {
-	return m.r.GetCurrentPartitionOfTheMember(ctx, member)
+	return m.r.GetPartitionOfTheMemberByID(ctx, member.ID)
 }
 
 func (m MemberUserCase) ClearOrdinals(ctx context.Context, unStableMembers []*Member) error {
@@ -165,4 +173,8 @@ func ConvertToMembersToGroups(members []*Member) []*MemberGroup {
 	}
 
 	return groups
+}
+
+func GenerateMemberName(group string, memberID string) string {
+	return fmt.Sprintf("%s-%s-%s", IDPrefix, group, memberID)
 }

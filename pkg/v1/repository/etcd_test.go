@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/denizgursoy/clerk/pkg/v1/usecases"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
@@ -64,7 +65,8 @@ func (s *ETCDTestSuite) startTestContainer() (string, error) {
 }
 
 func (s *ETCDTestSuite) SetupTest() {
-	_, err := s.etcdClient.Delete(context.Background(), ETCDRecordPrefix, clientv3.WithPrefix())
+	// clear all record before every session
+	_, err := s.etcdClient.Delete(context.Background(), usecases.IDPrefix, clientv3.WithPrefix())
 	require.NoError(s.T(), err)
 }
 

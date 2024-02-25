@@ -2,34 +2,48 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
+	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
-func (s *ETCDTestSuite) TestSaveMember() {
+const TestGroup = "test-group"
+
+var (
+	fistTestMember = usecases.Member{
+		Group:     TestGroup,
+		ID:        usecases.GenerateMemberName(TestGroup, uuid.NewString()),
+		CreatedAt: testCreationTime,
+	}
+	secondTestMember = usecases.Member{
+		Group:     TestGroup,
+		ID:        usecases.GenerateMemberName(TestGroup, uuid.NewString()),
+		CreatedAt: testCreationTime,
+	}
+
+	testCreationTime = time.Date(2024, 2, 15, 9, 57, 45, 0, time.UTC)
+	testUpdateTime   = time.Date(2024, 2, 15, 10, 5, 45, 0, time.UTC)
+)
+
+func (s *ETCDTestSuite) Test_SaveMember() {
 	ctx := context.Background()
-	member, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
-	require.NoError(s.T(), err)
-	require.NotZero(s.T(), member)
-
-	get, err := s.etcdClient.Get(ctx, member.ID)
+	err := s.r.SaveNewMember(ctx, fistTestMember)
 	require.NoError(s.T(), err)
 
-	parsedMember := usecases.Member{}
-	err = json.Unmarshal(get.Kvs[0].Value, &parsedMember)
+	member, err := s.r.FindMemberByID(ctx, fistTestMember.ID)
 	require.NoError(s.T(), err)
-	require.NotZero(s.T(), parsedMember)
+	require.Equal(s.T(), fistTestMember, *member)
 
 }
 
-func (s *ETCDTestSuite) TestGetAllMembers() {
+func (s *ETCDTestSuite) Test_GetAllMembers() {
 	ctx := context.Background()
-	_, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
+	err := s.r.SaveNewMember(ctx, fistTestMember)
 	require.NoError(s.T(), err)
 
-	_, err = s.r.SaveNewMemberToGroup(ctx, "test-group")
+	err = s.r.SaveNewMember(ctx, secondTestMember)
 	require.NoError(s.T(), err)
 
 	allMembers, err := s.r.GetAllMembers(ctx)
@@ -39,22 +53,35 @@ func (s *ETCDTestSuite) TestGetAllMembers() {
 
 func (s *ETCDTestSuite) Test_FindMemberByID() {
 	ctx := context.Background()
-	expectedMember, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
+	err := s.r.SaveNewMember(ctx, fistTestMember)
 	require.NoError(s.T(), err)
 
-	actualMember, err := s.r.FindMemberByID(ctx, expectedMember.ID)
+	actualMember, err := s.r.FindMemberByID(ctx, fistTestMember.ID)
 	require.NoError(s.T(), err)
 	require.NotZero(s.T(), actualMember)
 }
 
 func (s *ETCDTestSuite) Test_DeleteMemberFrom() {
 	ctx := context.Background()
-	expectedMember, err := s.r.SaveNewMemberToGroup(ctx, "test-group")
+	err := s.r.SaveNewMember(ctx, fistTestMember)
 	require.NoError(s.T(), err)
 
-	err = s.r.DeleteMemberFrom(ctx, expectedMember)
+	err = s.r.DeleteMemberByID(ctx, fistTestMember.ID)
 	require.NoError(s.T(), err)
 
-	_, err = s.r.FindMemberByID(ctx, expectedMember.ID)
+	_, err = s.r.FindMemberByID(ctx, fistTestMember.ID)
 	require.ErrorIs(s.T(), err, usecases.ErrMemberNotFound)
+}
+
+func (s *ETCDTestSuite) Test_SaveLastUpdatedTime() {
+	ctx := context.Background()
+	err := s.r.SaveNewMember(ctx, fistTestMember)
+	require.NoError(s.T(), err)
+
+	err = s.r.SaveLastUpdatedTimeByID(ctx, fistTestMember.ID, testUpdateTime)
+	require.NoError(s.T(), err)
+
+	member, err := s.r.FindMemberByID(ctx, fistTestMember.ID)
+	require.NoError(s.T(), err)
+	require.Equal(s.T(), testUpdateTime, *member.LastUpdatedTime)
 }

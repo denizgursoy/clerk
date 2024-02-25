@@ -117,7 +117,7 @@ func (m *MockMemberRepository) EXPECT() *MockMemberRepositoryMockRecorder {
 // SaveNewMemberToGroup mocks base method.
 func (m *MockMemberRepository) SaveNewMemberToGroup(ctx context.Context, group string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveNewMemberToGroup", ctx, group)
+	ret := m.ctrl.Call(m, "SaveNewMember", ctx, group)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -126,5 +126,5 @@ func (m *MockMemberRepository) SaveNewMemberToGroup(ctx context.Context, group s
 // SaveNewMemberToGroup indicates an expected call of SaveNewMemberToGroup.
 func (mr *MockMemberRepositoryMockRecorder) SaveNewMemberToGroup(ctx, group any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNewMemberToGroup", reflect.TypeOf((*MockMemberRepository)(nil).SaveNewMemberToGroup), ctx, group)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveNewMember", reflect.TypeOf((*MockMemberRepository)(nil).SaveNewMemberToGroup), ctx, group)
 }

@@ -3,6 +3,7 @@ package usecases
 
 import (
 	"context"
+	"time"
 )
 
 type Cache interface {
@@ -19,10 +20,10 @@ type MemberUseCase interface {
 }
 
 type MemberRepository interface {
-	SaveNewMemberToGroup(ctx context.Context, group string) (Member, error)
-	DeleteMemberFrom(ctx context.Context, member Member) error
-	SaveLastUpdatedTime(ctx context.Context, member Member) error
-	GetCurrentPartitionOfTheMember(ctx context.Context, member Member) (Partition, error)
+	SaveNewMember(ctx context.Context, member Member) error
+	DeleteMemberByID(ctx context.Context, id string) error
+	SaveLastUpdatedTimeByID(ctx context.Context, id string, updateTime time.Time) error
+	GetPartitionOfTheMemberByID(ctx context.Context, id string) (Partition, error)
 	GetAllMembers(ctx context.Context) ([]*Member, error)
 	UpdatePartitions(ctx context.Context, idPartitionMap map[string]Partition) error
 }
