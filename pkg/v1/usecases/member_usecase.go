@@ -87,6 +87,11 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 
 	groups := ConvertToMembersToGroups(members)
 	for i := range groups {
+		if groups[i].IsThereAnyMemberJoinedInTheLast(m.c.LifeSpanDuration) {
+			log.Info().Str("group", groups[i].Group()).
+				Msg("there are still members joining skipping the rebalance")
+			continue
+		}
 		stableMembers, unstableMembers := groups[i].StableAndUnstableMembers(m.c.LifeSpanDuration)
 		log.Info().
 			Str("group", groups[i].Group()).

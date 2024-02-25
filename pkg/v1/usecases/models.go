@@ -46,10 +46,6 @@ func (m *MemberGroup) Group() string {
 	return m.allMembers[0].Group
 }
 
-func (m *MemberGroup) Partition() string {
-	return m.allMembers[0].Group
-}
-
 func (m *MemberGroup) Add(member *Member) {
 	m.allMembers = append(m.allMembers, member)
 }
@@ -68,6 +64,12 @@ func (m *MemberGroup) StableAndUnstableMembers(d time.Duration) ([]*Member, []*M
 	return stableMembers, unstableMembers
 }
 
-func (m *MemberGroup) RearrangeOrders() {
+func (m *MemberGroup) IsThereAnyMemberJoinedInTheLast(d time.Duration) bool {
+	for i := range m.allMembers {
+		if m.allMembers[i].CreatedAt.Add(d).After(time.Now()) {
+			return true
+		}
+	}
 
+	return false
 }
