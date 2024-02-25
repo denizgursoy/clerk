@@ -47,14 +47,14 @@ func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Mem
 		return Partition{}, fmt.Errorf("could not update time: %w", err)
 	}
 
-	id, err := m.r.GetPartitionOfTheMemberByID(ctx, member.ID)
+	partition, err := m.r.GetPartitionOfTheMemberByID(ctx, member.ID)
 	if err != nil {
 		log.Err(err).Str("id", member.ID).Msg("get partition error")
 
 		return Partition{}, fmt.Errorf("could not get partition: %w", err)
 	}
 
-	return id, nil
+	return partition, nil
 
 }
 
@@ -93,16 +93,43 @@ func (m MemberUserCase) balance(ctx context.Context) error {
 			continue
 		}
 		stableMembers, unstableMembers := groups[i].StableAndUnstableMembers(m.c.LifeSpanDuration)
-		log.Info().
-			Str("group", groups[i].Group()).
-			Int("unstable member count", len(unstableMembers)).
-			Int("stable member count", len(stableMembers)).
-			Msg("setting ordinal again")
+
 		m.ClearOrdinals(ctx, unstableMembers)
-		m.setNewOrdinals(ctx, stableMembers)
+		if IsToBeRebalanced(stableMembers) {
+			log.Info().
+				Str("group", groups[i].Group()).
+				Int("unstable member count", len(unstableMembers)).
+				Int("stable member count", len(stableMembers)).
+				Msg("setting ordinal again")
+			m.setNewOrdinals(ctx, stableMembers)
+		} else {
+			log.Info().
+				Str("group", groups[i].Group()).
+				Msg("no need to rebalance")
+		}
+
 	}
 
 	return nil
+}
+
+func IsToBeRebalanced(members []*Member) bool {
+	ordinals := make([]int, 0)
+	for i := range members {
+		ordinal := members[i].Ordinal
+		if ordinal == 0 || ordinal > len(members) {
+			return true
+		}
+		if !slices.Contains(ordinals, ordinal) {
+			ordinals = append(ordinals, ordinal)
+		}
+	}
+
+	if len(ordinals) != len(members) {
+		return true
+	}
+
+	return false
 }
 
 func (m MemberUserCase) setNewOrdinals(ctx context.Context, stableMembers []*Member) {
