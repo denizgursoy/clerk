@@ -38,10 +38,24 @@ func (m MemberUserCase) AddNewMemberToGroup(ctx context.Context, group string) (
 	return member, nil
 }
 
-func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Member) error {
+func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Member) (Partition, error) {
 	log.Info().Str("group", member.Group).Str("id", member.ID).Msg("got the ping")
 
-	return m.r.SaveLastUpdatedTimeByID(ctx, member.ID, time.Now())
+	if err := m.r.SaveLastUpdatedTimeByID(ctx, member.ID, time.Now()); err != nil {
+		log.Err(err).Str("id", member.ID).Msg("update time error")
+
+		return Partition{}, fmt.Errorf("could not update time: %w", err)
+	}
+
+	id, err := m.r.GetPartitionOfTheMemberByID(ctx, member.ID)
+	if err != nil {
+		log.Err(err).Str("id", member.ID).Msg("get partition error")
+
+		return Partition{}, fmt.Errorf("could not get partition: %w", err)
+	}
+
+	return id, nil
+
 }
 
 func (m MemberUserCase) RemoveMember(ctx context.Context, member Member) error {
@@ -134,10 +148,6 @@ func getCurrentUsedOrdinals(stableMembers []*Member) []int {
 	}
 
 	return usedOrdinals
-}
-
-func (m MemberUserCase) GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error) {
-	return m.r.GetPartitionOfTheMemberByID(ctx, member.ID)
 }
 
 func (m MemberUserCase) ClearOrdinals(ctx context.Context, unStableMembers []*Member) error {

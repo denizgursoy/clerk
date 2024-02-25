@@ -4,8 +4,7 @@ option go_package = "./proto";
 
 service MemberService {
   rpc AddMember(MemberRequest) returns (Member){};
-  rpc QueryPartition(Member) returns (Partition){};
-  rpc Ping(Member) returns (google.protobuf.Empty) {}
+  rpc Ping(Member) returns (Partition) {}
   rpc RemoveMember(Member) returns (google.protobuf.Empty) {}
 }
 

@@ -30,13 +30,13 @@ func (m MemberGRPCHandler) AddMember(ctx context.Context, request *proto.MemberR
 	return toResponse(group), nil
 }
 
-func (m MemberGRPCHandler) Ping(ctx context.Context, member *proto.Member) (*empty.Empty, error) {
-	err := m.memberUseCase.GetHealthCheckFromMember(ctx, toMember(member))
+func (m MemberGRPCHandler) Ping(ctx context.Context, member *proto.Member) (*proto.Partition, error) {
+	partition, err := m.memberUseCase.GetHealthCheckFromMember(ctx, toMember(member))
 	if err != nil {
-		return new(empty.Empty), err
+		return new(proto.Partition), err
 	}
 
-	return new(empty.Empty), nil
+	return toProtoPartition(partition), nil
 }
 
 func (m MemberGRPCHandler) RemoveMember(ctx context.Context, member *proto.Member) (*empty.Empty, error) {
@@ -46,34 +46,4 @@ func (m MemberGRPCHandler) RemoveMember(ctx context.Context, member *proto.Membe
 	}
 
 	return new(empty.Empty), nil
-}
-
-func (m MemberGRPCHandler) QueryPartition(ctx context.Context, member *proto.Member) (*proto.Partition, error) {
-	partition, err := m.memberUseCase.GetPartitionOfTheMember(ctx, toMember(member))
-	if err != nil {
-		return new(proto.Partition), err
-	}
-
-	return toProtoPartition(partition), nil
-}
-
-func toProtoPartition(p usecases.Partition) *proto.Partition {
-	return &proto.Partition{
-		Ordinal: int32(p.Ordinal),
-		Total:   int32(p.Total),
-	}
-}
-
-func toResponse(m usecases.Member) *proto.Member {
-	return &proto.Member{
-		Id:    m.ID,
-		Group: m.Group,
-	}
-}
-
-func toMember(p *proto.Member) usecases.Member {
-	return usecases.Member{
-		Group: p.Group,
-		ID:    p.Id,
-	}
 }

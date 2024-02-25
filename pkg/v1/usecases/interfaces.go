@@ -12,11 +12,10 @@ type Cache interface {
 
 type MemberUseCase interface {
 	AddNewMemberToGroup(ctx context.Context, group string) (Member, error)
-	GetHealthCheckFromMember(ctx context.Context, member Member) error
+	GetHealthCheckFromMember(ctx context.Context, member Member) (Partition, error)
 	RemoveMember(ctx context.Context, member Member) error
 	TriggerBalance()
 	StopBalance()
-	GetPartitionOfTheMember(ctx context.Context, member Member) (Partition, error)
 }
 
 type MemberRepository interface {

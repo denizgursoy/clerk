@@ -31,7 +31,7 @@ type (
 
 var (
 	defaultMemberConfig = MemberConfig{
-		KeepAliveDuration: 2 * time.Second,
+		KeepAliveDuration: 4 * time.Second,
 	}
 )
 
@@ -53,8 +53,6 @@ func (m *Member) Start(c context.Context, fn NotifyFunction) error {
 	ctx, cancelFunc := context.WithCancel(c)
 	m.cancelFunc = cancelFunc
 	m.fn = fn
-
-	go m.executeFunction(ctx)
 	m.statPinging(ctx)
 
 	return nil
@@ -66,49 +64,33 @@ func (m *Member) statPinging(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-time.Tick(m.config.KeepAliveDuration):
-			_, err := m.grpcClient.Ping(ctx, toProto(m))
+			partition, err := m.grpcClient.Ping(ctx, toProto(m))
 			if err != nil {
 				if errStatus, ok := status.FromError(err); ok {
 					// Check gRPC status code and message
 					log.Printf("gRPC status code: %d, message: %s", errStatus.Code(), errStatus.Message())
 				}
-				break
+				continue
 			}
+			m.changePartition(ctx, partition)
 		}
 	}
 }
 
-func (m *Member) executeFunction(ctx context.Context) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.Tick(m.config.KeepAliveDuration):
-			partition, err := m.grpcClient.QueryPartition(ctx, toProto(m))
-			if err != nil {
-				if errorStatus, ok := status.FromError(err); ok {
-					// Check gRPC status code and message
-					log.Printf("gRPC status code: %d, message: %s", errorStatus.Code(), errorStatus.Message())
-				}
+func (m *Member) changePartition(ctx context.Context, partition *proto.Partition) {
+	if partition.Ordinal != m.partition.Ordinal ||
+		partition.Total != m.partition.Total {
 
-				break
-			}
+		m.partition.Ordinal = partition.Ordinal
+		m.partition.Total = partition.Total
 
-			if partition.Ordinal != m.partition.Ordinal ||
-				partition.Total != m.partition.Total {
-
-				m.partition.Ordinal = partition.Ordinal
-				m.partition.Total = partition.Total
-
-				m.fn(ctx, int(m.partition.Ordinal), int(m.partition.Total))
-			}
-		}
+		m.fn(ctx, int(m.partition.Ordinal), int(m.partition.Total))
 	}
-
 }
 
 func (m *Member) terminate() error {
 	m.cancelFunc()
+
 	return nil
 }
 
