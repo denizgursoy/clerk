@@ -24,6 +24,6 @@ type MemberRepository interface {
 	DeleteMemberByID(ctx context.Context, id string) error
 	SaveLastUpdatedTimeByID(ctx context.Context, id string, updateTime time.Time) error
 	GetPartitionOfTheMemberByID(ctx context.Context, id string) (Partition, error)
-	GetAllMembers(ctx context.Context) ([]*Member, error)
+	FetchAllMembers(ctx context.Context) ([]*Member, error)
 	UpdatePartitions(ctx context.Context, idPartitionMap map[string]Partition) error
 }

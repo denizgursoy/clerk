@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/denizgursoy/clerk/pkg/v1/usecases"
+	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/client/v3"
 )
 
@@ -46,7 +47,7 @@ func (m *MemberETCDRepository) DeleteMemberByID(ctx context.Context, id string) 
 }
 
 func (m *MemberETCDRepository) SaveLastUpdatedTimeByID(ctx context.Context, id string, updateTime time.Time) error {
-	member, err := m.FindMemberByID(ctx, id)
+	member, err := m.FetchMemberByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not find any member to update time: %w", err)
 	}
@@ -61,7 +62,7 @@ func (m *MemberETCDRepository) SaveLastUpdatedTimeByID(ctx context.Context, id s
 
 func (m *MemberETCDRepository) GetPartitionOfTheMemberByID(ctx context.Context,
 	id string) (usecases.Partition, error) {
-	member, err := m.FindMemberByID(ctx, id)
+	member, err := m.FetchMemberByID(ctx, id)
 	if err != nil {
 		return usecases.Partition{}, err
 	}
@@ -69,7 +70,7 @@ func (m *MemberETCDRepository) GetPartitionOfTheMemberByID(ctx context.Context,
 	return member.Partition, nil
 }
 
-func (m *MemberETCDRepository) FindMemberByID(ctx context.Context, id string) (*usecases.Member, error) {
+func (m *MemberETCDRepository) FetchMemberByID(ctx context.Context, id string) (*usecases.Member, error) {
 	response, err := m.e.Get(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch the member: %w", err)
@@ -85,7 +86,7 @@ func (m *MemberETCDRepository) FindMemberByID(ctx context.Context, id string) (*
 	return member, nil
 }
 
-func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]*usecases.Member, error) {
+func (m *MemberETCDRepository) FetchAllMembers(ctx context.Context) ([]*usecases.Member, error) {
 	allClerkRecords, err := m.e.Get(ctx, usecases.IDPrefix, clientv3.WithPrefix())
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch all members: %w", err)
@@ -103,12 +104,18 @@ func (m *MemberETCDRepository) GetAllMembers(ctx context.Context) ([]*usecases.M
 }
 
 func (m *MemberETCDRepository) UpdatePartitions(ctx context.Context, idPartitionMap map[string]usecases.Partition) error {
-	// for i := range members {
-	// 	partition, ok := idPartitionMap[members[i].ID]
-	// 	if ok {
-	// 		members[i].Partition = partition
-	// 	}
-	// }
-	//
+	for id, partition := range idPartitionMap {
+		member, err := m.FetchMemberByID(ctx, id)
+		if err != nil {
+			log.Err(err).Str("id", id).Msg("fetch member id")
+			return fmt.Errorf("could not update partition: %w", err)
+		}
+		member.Partition = partition
+		if err = m.SaveNewMember(ctx, *member); err != nil {
+			log.Err(err).Str("id", member.ID).Msg("update member error")
+			return fmt.Errorf("could not update member: %w", err)
+		}
+	}
+
 	return nil
 }

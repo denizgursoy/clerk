@@ -66,7 +66,7 @@ func (m MemberUserCase) StopBalance() {
 func (m MemberUserCase) balance(ctx context.Context) error {
 	log.Info().Msg("checking balance")
 
-	members, err := m.r.GetAllMembers(ctx)
+	members, err := m.r.FetchAllMembers(ctx)
 	if err != nil {
 		return fmt.Errorf("could not fetch all allMembers: %w", err)
 	}
