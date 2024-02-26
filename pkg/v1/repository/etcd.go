@@ -14,7 +14,6 @@ func CreateETCDClient(cfg config.Config) (*clientv3.Client, error) {
 		Endpoints:   []string{cfg.ETCDEndpoint},
 		DialTimeout: 5 * time.Second,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("could not create etc client: %w", err)
 	}

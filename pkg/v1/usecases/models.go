@@ -20,6 +20,7 @@ type Member struct {
 func (m Member) IsActiveForTheLast(duration time.Duration) bool {
 	return m.LastActiveDate().Add(duration).After(time.Now())
 }
+
 func (m Member) LastActiveDate() time.Time {
 	if m.LastUpdatedTime != nil {
 		return *m.LastUpdatedTime

@@ -61,7 +61,8 @@ func (m *MemberETCDRepository) SaveLastUpdatedTimeByID(ctx context.Context, id s
 }
 
 func (m *MemberETCDRepository) GetPartitionOfTheMemberByID(ctx context.Context,
-	id string) (usecases.Partition, error) {
+	id string,
+) (usecases.Partition, error) {
 	member, err := m.FetchMemberByID(ctx, id)
 	if err != nil {
 		return usecases.Partition{}, err

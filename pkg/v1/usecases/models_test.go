@@ -35,5 +35,4 @@ func TestMember_IsActive(t *testing.T) {
 
 		require.False(t, member.IsActiveForTheLast(2*time.Second))
 	})
-
 }

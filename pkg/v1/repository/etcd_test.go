@@ -27,7 +27,6 @@ func TestExampleTestSuite(t *testing.T) {
 }
 
 func (s *ETCDTestSuite) SetupSuite() {
-
 	port, err := s.startTestContainer()
 	require.NoError(s.T(), err)
 	client, err := CreateETCDClient(config.Config{
@@ -71,5 +70,4 @@ func (s *ETCDTestSuite) SetupTest() {
 }
 
 func (s *ETCDTestSuite) TearDownTest() {
-
 }

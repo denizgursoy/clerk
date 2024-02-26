@@ -10,8 +10,7 @@ import (
 )
 
 type (
-	NotifyFunction func(ctx context.Context, ordinal, total int) error
-	MemberConfig   struct {
+	MemberConfig struct {
 		KeepAliveDuration time.Duration
 	}
 	ClerkServerConfig struct {
@@ -19,21 +18,24 @@ type (
 	}
 
 	Member struct {
-		group      string
-		id         string
-		fn         NotifyFunction
-		partition  proto.Partition
-		cancelFunc context.CancelFunc
-		config     MemberConfig
-		grpcClient proto.MemberServiceClient
+		group         string
+		id            string
+		lastPartition Partition
+		cancelFunc    context.CancelFunc
+		config        MemberConfig
+		grpcClient    proto.MemberServiceClient
+		notifyChannel chan Partition
+	}
+
+	Partition struct {
+		Ordinal int
+		Total   int
 	}
 )
 
-var (
-	defaultMemberConfig = MemberConfig{
-		KeepAliveDuration: 4 * time.Second,
-	}
-)
+var defaultMemberConfig = MemberConfig{
+	KeepAliveDuration: 4 * time.Second,
+}
 
 func newMember(grpcClient proto.MemberServiceClient, member *proto.Member, c MemberConfig) *Member {
 	return &Member{
@@ -46,16 +48,13 @@ func newMember(grpcClient proto.MemberServiceClient, member *proto.Member, c Mem
 
 // Start function initializes the pinging.
 // It is a blocking function
-func (m *Member) Start(c context.Context, fn NotifyFunction) error {
-	if fn == nil {
-		return ErrEmptyFunction
-	}
+func (m *Member) Start(c context.Context) (<-chan Partition, error) {
 	ctx, cancelFunc := context.WithCancel(c)
 	m.cancelFunc = cancelFunc
-	m.fn = fn
-	m.statPinging(ctx)
+	m.notifyChannel = make(chan Partition)
+	go m.statPinging(ctx)
 
-	return nil
+	return m.notifyChannel, nil
 }
 
 func (m *Member) statPinging(ctx context.Context) error {
@@ -72,24 +71,27 @@ func (m *Member) statPinging(ctx context.Context) error {
 				}
 				continue
 			}
-			m.changePartition(ctx, partition)
+			m.changePartition(partition)
 		}
 	}
 }
 
-func (m *Member) changePartition(ctx context.Context, partition *proto.Partition) {
-	if partition.Ordinal != m.partition.Ordinal ||
-		partition.Total != m.partition.Total {
-
-		m.partition.Ordinal = partition.Ordinal
-		m.partition.Total = partition.Total
-
-		m.fn(ctx, int(m.partition.Ordinal), int(m.partition.Total))
+func (m *Member) changePartition(partition *proto.Partition) {
+	if int(partition.Ordinal) != m.lastPartition.Ordinal ||
+		int(partition.Total) != m.lastPartition.Total {
+		newPartition := Partition{
+			Ordinal: int(partition.Ordinal),
+			Total:   int(partition.Total),
+		}
+		m.lastPartition = newPartition
+		m.notifyChannel <- newPartition
 	}
 }
 
 func (m *Member) terminate() error {
 	m.cancelFunc()
+	close(m.notifyChannel)
+	m.notifyChannel = nil
 
 	return nil
 }

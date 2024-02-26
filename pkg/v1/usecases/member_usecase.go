@@ -55,7 +55,6 @@ func (m MemberUserCase) GetHealthCheckFromMember(ctx context.Context, member Mem
 	}
 
 	return partition, nil
-
 }
 
 func (m MemberUserCase) RemoveMember(ctx context.Context, member Member) error {
@@ -70,7 +69,6 @@ func (m MemberUserCase) TriggerBalance() {
 			log.Err(err).Msg("balance error")
 		}
 	}
-
 }
 
 func (m MemberUserCase) StopBalance() {

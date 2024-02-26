@@ -35,7 +35,6 @@ func (s *ETCDTestSuite) Test_SaveMember() {
 	member, err := s.r.FetchMemberByID(ctx, fistTestMember.ID)
 	require.NoError(s.T(), err)
 	require.Equal(s.T(), fistTestMember, *member)
-
 }
 
 func (s *ETCDTestSuite) Test_GetAllMembers() {

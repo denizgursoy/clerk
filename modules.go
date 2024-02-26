@@ -22,7 +22,6 @@ func StartGRPCServer(lc fx.Lifecycle, sd fx.Shutdowner, c config.Config, srv *gr
 						log.Info().Msg("could not stop the app")
 					}
 				}
-
 			}()
 
 			return nil
