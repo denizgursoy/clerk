@@ -4,8 +4,6 @@ FROM golang:1.21-alpine AS build
 # Set the working directory
 WORKDIR /app
 
-# Copy and download dependencies
-
 # Copy the source code
 COPY . .
 RUN go mod tidy

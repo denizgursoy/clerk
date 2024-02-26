@@ -37,6 +37,7 @@ dockers:
   - image_templates:
       - 'ghcr.io/denizgursoy/clerk:{{ .Tag }}'
       - 'ghcr.io/denizgursoy/clerk:latest'
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/denizgursoy/clerk/main/README.md"
