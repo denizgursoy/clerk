@@ -5,11 +5,10 @@ FROM golang:1.21-alpine AS build
 WORKDIR /app
 
 # Copy and download dependencies
-COPY go.mod go.sum ./
-RUN go mod download
 
 # Copy the source code
 COPY . .
+RUN go mod tidy
 
 # Build the Go application
 RUN CGO_ENABLED=0 GOOS=linux go build -o clerk .
