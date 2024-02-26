@@ -25,6 +25,7 @@ type (
 		config        MemberConfig
 		grpcClient    proto.MemberServiceClient
 		notifyChannel chan Partition
+		pingTicker    *time.Ticker
 	}
 
 	Partition struct {
@@ -52,17 +53,19 @@ func (m *Member) Start(c context.Context) <-chan Partition {
 	ctx, cancelFunc := context.WithCancel(c)
 	m.cancelFunc = cancelFunc
 	m.notifyChannel = make(chan Partition)
+	m.pingTicker = time.NewTicker(m.config.KeepAliveDuration)
 	go m.statPinging(ctx)
 
 	return m.notifyChannel
 }
 
-func (m *Member) statPinging(ctx context.Context) error {
+func (m *Member) statPinging(ctx context.Context) {
 	for {
+
 		select {
 		case <-ctx.Done():
-			return nil
-		case <-time.Tick(m.config.KeepAliveDuration):
+			return
+		case <-m.pingTicker.C:
 			partition, err := m.grpcClient.Ping(ctx, toProto(m))
 			if err != nil {
 				if errStatus, ok := status.FromError(err); ok {
@@ -92,6 +95,7 @@ func (m *Member) terminate() error {
 	m.cancelFunc()
 	close(m.notifyChannel)
 	m.notifyChannel = nil
+	m.pingTicker.Stop()
 
 	return nil
 }
@@ -113,4 +117,16 @@ func toProto(m *Member) *proto.Member {
 		Group: m.group,
 		Id:    m.id,
 	}
+}
+
+func (m *Member) ID() string {
+	return m.id
+}
+
+func (m *Member) Group() string {
+	return m.group
+}
+
+func (m *Member) Partition() Partition {
+	return m.lastPartition
 }
