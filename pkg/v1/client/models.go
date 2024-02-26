@@ -48,13 +48,13 @@ func newMember(grpcClient proto.MemberServiceClient, member *proto.Member, c Mem
 
 // Start function initializes the pinging.
 // It is a blocking function
-func (m *Member) Start(c context.Context) (<-chan Partition, error) {
+func (m *Member) Start(c context.Context) <-chan Partition {
 	ctx, cancelFunc := context.WithCancel(c)
 	m.cancelFunc = cancelFunc
 	m.notifyChannel = make(chan Partition)
 	go m.statPinging(ctx)
 
-	return m.notifyChannel, nil
+	return m.notifyChannel
 }
 
 func (m *Member) statPinging(ctx context.Context) error {
