@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 
-	"github.com/denizgursoy/clerk/pkg/v1/usecases"
-	"github.com/denizgursoy/clerk/proto"
+	"github.com/denizgursoy/clerk/internal/v1/usecases"
+	"github.com/denizgursoy/clerk_grpc/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 )

@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/denizgursoy/clerk/internal/v1/config"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )

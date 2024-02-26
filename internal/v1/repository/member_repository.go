@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/denizgursoy/clerk/pkg/v1/usecases"
+	"github.com/denizgursoy/clerk/internal/v1/usecases"
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/client/v3"
 )

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/denizgursoy/clerk/pkg/v1/usecases"
-	"github.com/denizgursoy/clerk/proto"
+	"github.com/denizgursoy/clerk/internal/v1/usecases"
+	"github.com/denizgursoy/clerk_grpc/proto"
 )
 
 func toProtoPartition(p usecases.Partition) *proto.Partition {

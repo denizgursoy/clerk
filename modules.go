@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/denizgursoy/clerk/pkg/v1/config"
-	"github.com/denizgursoy/clerk/pkg/v1/repository"
-	"github.com/denizgursoy/clerk/pkg/v1/server"
-	"github.com/denizgursoy/clerk/pkg/v1/usecases"
+	"github.com/denizgursoy/clerk/internal/v1/config"
+	"github.com/denizgursoy/clerk/internal/v1/repository"
+	"github.com/denizgursoy/clerk/internal/v1/server"
+	"github.com/denizgursoy/clerk/internal/v1/usecases"
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/client/v3"
 	"go.uber.org/fx"

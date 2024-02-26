@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/denizgursoy/clerk/internal/v1/config"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )

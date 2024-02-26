@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/denizgursoy/clerk/pkg/v1/config"
+	"github.com/denizgursoy/clerk/internal/v1/config"
 	"go.etcd.io/etcd/client/v3"
 )
 

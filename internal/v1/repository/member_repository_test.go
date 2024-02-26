@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/denizgursoy/clerk/pkg/v1/usecases"
+	"github.com/denizgursoy/clerk/internal/v1/usecases"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
