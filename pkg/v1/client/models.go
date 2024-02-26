@@ -35,7 +35,7 @@ type (
 )
 
 var defaultMemberConfig = MemberConfig{
-	KeepAliveDuration: 4 * time.Second,
+	KeepAliveDuration: 6 * time.Second,
 }
 
 func newMember(grpcClient proto.MemberServiceClient, member *proto.Member, c MemberConfig) *Member {
@@ -61,7 +61,6 @@ func (m *Member) Start(c context.Context) <-chan Partition {
 
 func (m *Member) statPinging(ctx context.Context) {
 	for {
-
 		select {
 		case <-ctx.Done():
 			return
