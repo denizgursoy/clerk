@@ -1,11 +1,6 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    # - go generate ./...
 builds:
   - env:
       - CGO_ENABLED=0
@@ -13,11 +8,6 @@ builds:
       - linux
       - windows
       - darwin
-    main: ./main.go
-    ldflags:
-      - -s -w -X main.Version={{.Version}} -X main.BuildCommit={{.ShortCommit}} -X main.BuildDate={{.Date}}
-    flags:
-      - -trimpath
     ignore:
       - goos:  windows
         goarch: arm64
@@ -43,19 +33,16 @@ changelog:
       - '^docs:'
       - '^test:'
 
-# modelines, feel free to remove those if you don't want/use them:
-# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
 dockers:
   - image_templates:
       - 'ghcr.io/denizgursoy/clerk:{{ .Tag }}'
       - 'ghcr.io/denizgursoy/clerk:latest'
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/denizgursoy/gotouch/main/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/denizgursoy/clerk/main/README.md"
       - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Deniz Gursoy\",\"email\":\"denizgursoy.443@gmail.com\"}]"
       - "--label=io.artifacthub.package.license=MIT"
-      - "--label=org.opencontainers.image.description=Customizable Project Creator"
+      - "--label=org.opencontainers.image.description=Clerk"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
